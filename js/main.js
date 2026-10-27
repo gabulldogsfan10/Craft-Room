@@ -162,12 +162,27 @@ function renderList() {
 }
 renderList();
 
+// When hosted as a claude.ai artifact, downloads and printing are blocked,
+// so offer copy-to-clipboard instead.
+const embedded = Boolean(window.CRAFT_EMBEDDED);
+if (embedded) {
+  document.querySelectorAll('.download, #print-list').forEach(e => (e.hidden = true));
+  $('#export-csv').textContent = 'Copy as CSV';
+}
+
 $('#export-csv').onclick = () => {
   const rows = [['Zone', 'Product', 'Size / finish', 'Qty', 'Est. each (USD)', 'Est. total (USD)', 'Got it', 'Use', 'IKEA link']];
   for (const p of PRODUCTS) {
     rows.push([ZONES[p.zone].name, p.name, p.spec, p.qty, p.price, p.qty * p.price, owned.has(p.key) ? 'yes' : '', p.why, ikeaUrl(p)]);
   }
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  if (embedded) {
+    const btn = $('#export-csv');
+    navigator.clipboard.writeText(csv)
+      .then(() => (btn.textContent = 'Copied – paste into a spreadsheet'))
+      .catch(() => (btn.textContent = 'Copy blocked – use the repo version to download'));
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   a.download = 'craft-room-ikea-list.csv';

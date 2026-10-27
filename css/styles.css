@@ -10,7 +10,7 @@
   --wall-fill: #efe9f2;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #18141b;
     --panel: #221d26;
     --ink: #eee8f1;
@@ -20,7 +20,20 @@
     --accent-ink: #1b1520;
     --wall: #d9c4e4;
     --wall-fill: #2b2430;
+    color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #18141b;
+  --panel: #221d26;
+  --ink: #eee8f1;
+  --muted: #a99fb0;
+  --line: #3a3240;
+  --accent: #c79ad9;
+  --accent-ink: #1b1520;
+  --wall: #d9c4e4;
+  --wall-fill: #2b2430;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -35,7 +48,10 @@ button { font: inherit; cursor: pointer; }
 
 .top {
   display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between;
-  padding: 18px 24px 0; border-bottom: 1px solid var(--line); background: var(--panel);
+  padding-block: 18px 0;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line); background: var(--panel);
 }
 h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.01em; }
 .sub { margin: 2px 0 12px; color: var(--muted); }
@@ -45,7 +61,11 @@ h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.01em; }
 }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
 
-main { padding: 20px 24px 40px; max-width: 1500px; margin: 0 auto; }
+main {
+  padding-block: 20px 40px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  max-width: 1500px; margin: 0 auto; }
 .tab { display: none; }
 .tab.active { display: block; }
 .lead { color: var(--muted); max-width: 900px; margin: 0 0 16px; }
@@ -62,11 +82,11 @@ main { padding: 20px 24px 40px; max-width: 1500px; margin: 0 auto; }
 .viewport { position: relative; }
 #room-canvas {
   width: 100%; height: min(72vh, 760px); display: block; border-radius: 12px; border: 1px solid var(--line);
-  background: #e9e4ea; touch-action: none;
+  background: var(--wall-fill); touch-action: none;
 }
 .view-buttons { position: absolute; top: 10px; left: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
 .view-buttons button, .list-actions button {
-  background: rgba(255, 255, 255, 0.92); color: #2a2230; border: 1px solid #d8d0dc; border-radius: 999px; padding: 5px 12px; font-size: 13px;
+  background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 13px;
 }
 .view-buttons button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .hint { color: var(--muted); font-size: 13px; margin: 6px 2px 0; }
@@ -119,7 +139,7 @@ figcaption { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .elev-door { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
 .elev-opening { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .elev-switch { fill: var(--panel); stroke: var(--muted); }
-.elev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 16px; }
+.elev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 16px; }
 .elev-info { min-height: 3em; font-size: 14px; }
 .elev-info h3 { color: var(--ink); }
 
@@ -142,7 +162,7 @@ tr.owned td { opacity: 0.5; }
 tr.owned td.chk { opacity: 1; }
 
 /* Notes */
-.notes.active { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+.notes.active { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 16px; }
 .notes ul { margin: 0; padding-left: 18px; }
 .notes li { margin-bottom: 6px; }
 
@@ -150,7 +170,10 @@ tr.owned td.chk { opacity: 1; }
   .render-layout, #tab-plan.active { grid-template-columns: 1fr; }
   .pair { grid-template-columns: 1fr; }
   .elev-grid { grid-template-columns: 1fr; }
-  main, .top { padding-left: 16px; padding-right: 16px; }
+  main, .top {
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
 }
 
 @media print {
