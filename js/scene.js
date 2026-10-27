@@ -552,7 +552,7 @@ export const BUILDERS = {
   norden(p, g) {
     const W = white();
     const top = 74;
-    // drawer section (26 cm) at the east end, one 63 cm leaf raised to the west
+    // drawer section (10¼″) at the east end, one 24¾″ leaf raised to the west
     const mx0 = p.x1 - 26;
     g.add(box(mx0, 0, p.z0 + 2, p.x1, top - 3, p.z1 - 2, W));
     for (let i = 0; i < 3; i++) {

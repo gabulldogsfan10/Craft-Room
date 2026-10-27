@@ -1,7 +1,7 @@
 import { PRODUCTS, ZONES, PHOTO_VIEWS, WALL_COLORS, productByKey, ikeaUrl } from './data.js';
 import { createRoom } from './scene.js';
 import { productImage } from './previews.js';
-import { floorPlan, elevation, WALL_NAMES, feetInches } from './drawings.js';
+import { floorPlan, elevation, wallSummary, WALL_NAMES, feetInches } from './drawings.js';
 
 const $ = s => document.querySelector(s);
 const money = n => `$${n.toLocaleString('en-US')}`;
@@ -152,8 +152,36 @@ for (const w of WALL_NAMES) {
   const info = document.createElement('div');
   info.className = 'elev-info muted';
   info.textContent = 'Click a piece for details';
-  wrap.append(elevation(w, p => (info.innerHTML = pieceHtml(p))), info);
+  const show = p => (info.innerHTML = pieceHtml(p));
+  wrap.append(elevation(w, show), wallTable(w, show), info);
   $('#elevations').append(wrap);
+}
+
+// How much of the wall each piece takes up, measured from the left as you face it.
+function wallTable(name, show) {
+  const sum = wallSummary(name);
+  const box = document.createElement('div');
+  box.className = 'wall-table';
+  const pct = Math.round((sum.used / sum.length) * 100);
+  const openings = (sum.openingChain || []).filter(s => !s.gap).map(s => `${esc(s.label)} ${feetInches(s.r - s.l)}`);
+  const lead = sum.used
+    ? `Furniture on the floor takes up <b>${feetInches(sum.used)}</b> of this <b>${feetInches(sum.length)}</b> wall (${pct}%), leaving <b>${feetInches(sum.free)}</b> open.`
+    : `No furniture stands along this <b>${feetInches(sum.length)}</b> wall.`;
+  box.innerHTML = `
+    <p>${lead}${openings.length ? ` ${openings.join(' · ')}.` : ''}</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Piece</th><th class="n">Wall length used</th><th class="n">Starts from left</th><th class="n">Height</th></tr></thead>
+      <tbody>${sum.rows.map((r, i) => `
+        <tr>
+          <td><button class="name-btn" data-row="${i}">${esc(r.name)}</button>${r.mounted ? ' <span class="muted">(on the wall)</span>' : ''}</td>
+          <td class="n">${feetInches(r.len)}</td>
+          <td class="n">${feetInches(r.from)}</td>
+          <td class="n">${r.mounted ? `top at ${feetInches(r.top)}` : feetInches(r.height)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  box.querySelectorAll('[data-row]').forEach(b => (b.onclick = () => show(sum.rows[b.dataset.row].piece)));
+  return box;
 }
 
 // ------------------------------------------------------------ shopping list

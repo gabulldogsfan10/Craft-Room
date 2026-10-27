@@ -30,7 +30,7 @@ It also works as-is on GitHub Pages.
 
 ## The plan
 
-- **North wall (window):** a window seat from 2× BESTÅ 120 frames with 4 drawers, cushions, light-filtering curtains and a HEKTAR floor lamp. This is the hand-embroidery nook.
+- **North wall (window):** a window seat from 2× 47¼″ BESTÅ frames with 4 drawers, cushions, light-filtering curtains and a HEKTAR floor lamp. This is the hand-embroidery nook.
 - **East wall (where the TV is now):** machine embroidery station. KARLBY countertop on 2× ALEX, SKÅDIS pegboards for hoops, a LACK shelf for thread, TERTIAL lamps and a LÅNGFJÄLL chair.
 - **West wall (gallery wall):** supply wall. KALLAX 4×4 with inserts and DRÖNA boxes, plus 2× ALEX 9-drawer units for beads and jewelry findings.
 - **Centre:** a NORDEN gateleg table for cutting and beading that folds away, 2 TEODORES chairs, a RÅSKOG cart and a LOHALS rug.
@@ -38,10 +38,12 @@ It also works as-is on GitHub Pages.
 
 ## Editing the design
 
-All measurements, furniture positions and products live in `js/data.js`. Units
-are centimetres, with x running west→east and z running north→south. The 3D
-model, plan, elevations and shopping list are all generated from that file.
-The window width (69.5″) is measured. The sill height, door and ceiling sizes are
+All measurements, furniture positions and products live in `js/data.js`, with
+x running west→east and z running north→south. The 3D model, plan, elevations and
+shopping list are all generated from that file. Everything the app shows is in
+feet and inches (to the nearest ¼″). Only the model's internal coordinates use
+IKEA's metric grid, and `feetInches()` in `js/drawings.js` converts them for display.
+The window width (69½″) is measured. The sill height, door and ceiling sizes are
 estimated from the photos, so measure those and update `ROOM`.
 
 Item pictures are rendered from the plan's own 3D models (`js/previews.js`), not IKEA photos.

@@ -150,6 +150,12 @@ figcaption { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .dim-left { text-anchor: end; }
 .dim-start { text-anchor: start; font-weight: 600; fill: var(--ink) !important; font-size: 12px; }
 .dim-line { stroke: var(--muted); }
+.chain-line, .chain-tick { stroke: var(--ink); stroke-width: 0.8; }
+.chain text { font-size: 9px; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+.chain-item { font-weight: 700; fill: var(--accent) !important; }
+.chain-gap { fill: var(--muted) !important; }
+.chain-total .chain-item { fill: var(--ink) !important; }
+.chain-row { font-size: 8px; text-anchor: end; dominant-baseline: central; fill: var(--muted) !important; text-transform: uppercase; letter-spacing: 0.06em; }
 .elev-wall { fill: var(--wall-fill); stroke: var(--wall); stroke-width: 2; }
 .floor-line { stroke: var(--ink); stroke-width: 3; }
 .elev-window { fill: #cfe3ef; stroke: #4f87a8; stroke-width: 2; }
@@ -157,8 +163,13 @@ figcaption { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .elev-door { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
 .elev-opening { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .elev-switch { fill: var(--panel); stroke: var(--muted); }
-.elev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 16px; }
+.elev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(600px, 100%), 1fr)); gap: 16px; }
 .elev-info { min-height: 3em; font-size: 14px; }
+.wall-table { font-size: 14px; margin: 4px 0 10px; }
+.wall-table p { margin: 0 0 6px; }
+.wall-table table { font-size: 13px; }
+.wall-table td, .wall-table th { padding: 5px 6px; }
+.table-scroll { overflow-x: auto; }
 .elev-info h3 { color: var(--ink); }
 
 /* Shopping list */

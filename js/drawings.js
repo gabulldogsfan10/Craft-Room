@@ -11,11 +11,109 @@ function el(tag, attrs = {}, text) {
   return e;
 }
 
+// Model units -> feet and inches, to the nearest quarter inch (e.g. 3′ 11¼″).
+const QUARTERS = ['', '¼', '½', '¾'];
 export function feetInches(cm) {
-  const totalIn = Math.round(cm / 2.54);
-  const ft = Math.floor(totalIn / 12);
-  const inch = totalIn % 12;
-  return ft ? `${ft}′${inch ? ` ${inch}″` : ''}` : `${inch}″`;
+  const q = Math.round((cm / 2.54) * 4);
+  const ft = Math.floor(q / 48);
+  const inch = Math.floor((q % 48) / 4);
+  const frac = QUARTERS[q % 4];
+  const inches = inch || frac ? `${inch || ''}${frac}″` : '';
+  if (!ft) return inches || '0″';
+  return inches ? `${ft}′ ${inches}` : `${ft}′ 0″`;
+}
+
+// ---------------------------------------------------------------- wall runs
+
+// Furniture that stands on the floor against a wall, and pieces hung on it.
+const FLOOR_KINDS = new Set(['besta', 'kallax', 'alex', 'top', 'floorlamp']);
+const MOUNTED_KINDS = new Set(['skadis', 'shelf', 'ledge']);
+
+// Merge overlapping spans (e.g. the KARLBY counter over its ALEX units).
+function mergeSpans(spans) {
+  const out = [];
+  for (const s of [...spans].sort((a, b) => a.l - b.l)) {
+    const last = out[out.length - 1];
+    if (last && s.l < last.r - 0.5) {
+      last.r = Math.max(last.r, s.r);
+      if (!last.labels.includes(s.label)) last.labels.push(s.label);
+    } else {
+      out.push({ l: s.l, r: s.r, labels: [s.label] });
+    }
+  }
+  return out;
+}
+
+// Splits 0..R into alternating gap / item segments.
+function chain(spans) {
+  const segs = [];
+  let at = 0;
+  for (const s of spans) {
+    if (s.l - at > 0.6) segs.push({ l: at, r: s.l, gap: true });
+    segs.push({ l: s.l, r: s.r, label: s.labels.join(' + ') });
+    at = s.r;
+  }
+  if (R - at > 0.6) segs.push({ l: at, r: R, gap: true });
+  return segs;
+}
+
+// What stands along a wall, measured from the left as you face it.
+export function wallSummary(name) {
+  const W = WALLS[name];
+  const along = p => {
+    const [l, r] = W.h(...W.span(p));
+    return { l, r, label: shortLabel(p) || pieceLabel(p) };
+  };
+  const nearWall = PIECES.filter(p => W.depth(p) < 20);
+  const floor = nearWall.filter(p => FLOOR_KINDS.has(p.kind));
+  const mounted = nearWall.filter(p => MOUNTED_KINDS.has(p.kind));
+  const floorSpans = mergeSpans(floor.map(along));
+  const openings = [];
+  if (name === 'north') openings.push({ ...spanOf(W, ROOM.window.x0, ROOM.window.x1), labels: ['Window'] });
+  if (name === 'south') {
+    openings.push({ ...spanOf(W, ROOM.entry.x0, ROOM.entry.x1), labels: ['Entry door'] });
+    openings.push({ ...spanOf(W, ROOM.closet.x0, ROOM.closet.x1), labels: ['Closet doors'] });
+    openings.sort((a, b) => a.l - b.l);
+  }
+  const used = floorSpans.reduce((t, s) => t + s.r - s.l, 0);
+  const rows = [...floor, ...mounted].map(p => {
+    const a = along(p);
+    return { piece: p, name: pieceLabel(p), mounted: MOUNTED_KINDS.has(p.kind), from: a.l, len: a.r - a.l, height: p.y1 - p.y0, top: p.y1 };
+  }).sort((a, b) => a.mounted - b.mounted || a.from - b.from);
+  return { length: R, used, free: R - used, floorChain: chain(floorSpans), openingChain: openings.length ? chain(openings) : null, rows };
+}
+
+function spanOf(W, a, b) {
+  const [l, r] = W.h(a, b);
+  return { l, r };
+}
+
+// Draws a dimension chain. `pt(h, off)` maps a position along the wall and an
+// offset from the line to SVG coordinates; `rot` turns the text for side walls.
+function drawChain(svg, segs, pt, rot, cls) {
+  const g = el('g', { class: `chain ${cls || ''}` });
+  const [ax, ay] = pt(0, 0);
+  const [bx, by] = pt(R, 0);
+  g.append(el('line', { x1: ax, y1: ay, x2: bx, y2: by, class: 'chain-line' }));
+  const ticks = new Set([0, R, ...segs.flatMap(s => [s.l, s.r])]);
+  for (const t of ticks) {
+    const [x1, y1] = pt(t, -4);
+    const [x2, y2] = pt(t, 4);
+    g.append(el('line', { x1, y1, x2, y2, class: 'chain-tick' }));
+  }
+  for (const s of segs) {
+    const len = s.r - s.l;
+    const text = feetInches(len);
+    // skip text that can't fit; the table below the drawing lists every length
+    if (len < text.length * 4.2) continue;
+    const [x, y] = pt((s.l + s.r) / 2, -7);
+    g.append(el('text', {
+      x, y, class: s.gap ? 'chain-gap' : 'chain-item',
+      transform: rot ? `rotate(${rot} ${x} ${y})` : '',
+    }, text));
+    if (!s.gap && s.label) g.lastChild.append(el('title', {}, `${s.label}: ${text}`));
+  }
+  svg.append(g);
 }
 
 function pieceLabel(p) {
@@ -42,7 +140,7 @@ function zoneColor(p) {
 const PLAN_SKIP = new Set(['pillow', 'curtain', 'rod', 'tertial', 'machine', 'ledge', 'skadis', 'shelf', 'cushion']);
 
 export function floorPlan(onSelect) {
-  const pad = 70;
+  const pad = 92;
   const svg = el('svg', { viewBox: `${-pad} ${-pad} ${R + pad * 2} ${R + pad * 2}`, class: 'drawing plan' });
 
   // 1 ft grid
@@ -100,14 +198,33 @@ export function floorPlan(onSelect) {
   swing(closet.x1, R, leaf, -1);
   swing(entry.hingeX, R, entry.x1 - entry.x0, -1);
 
+  // How much of each wall the furniture takes up, measured outside the wall.
+  const base = wt + 14;
+  const SIDES = {
+    north: { at: h => [h, 0], n: [0, -1], rot: 0 },
+    east: { at: h => [R, h], n: [1, 0], rot: 90 },
+    south: { at: h => [R - h, R], n: [0, 1], rot: 0 },
+    west: { at: h => [0, R - h], n: [-1, 0], rot: -90 },
+  };
+  for (const [name, side] of Object.entries(SIDES)) {
+    const pt = (h, off) => {
+      const [x, y] = side.at(h);
+      return [x + side.n[0] * (base - off), y + side.n[1] * (base - off)];
+    };
+    const { floorChain, openingChain } = wallSummary(name);
+    const segs = floorChain.some(s => !s.gap) ? floorChain : openingChain;
+    if (segs) drawChain(svg, segs, pt, side.rot);
+  }
+
   // Labels & dimensions
-  svg.append(el('text', { x: R / 2, y: -wt - 22, class: 'wall-name' }, 'NORTH — window'));
-  svg.append(el('text', { x: R / 2, y: R + wt + 34, class: 'wall-name' }, 'SOUTH — closet & entry'));
-  svg.append(el('text', { x: -wt - 22, y: R / 2, class: 'wall-name', transform: `rotate(-90 ${-wt - 22} ${R / 2})` }, 'WEST — supply wall'));
-  svg.append(el('text', { x: R + wt + 22, y: R / 2, class: 'wall-name', transform: `rotate(90 ${R + wt + 22} ${R / 2})` }, 'EAST — machine station'));
+  const nameOff = wt + 52;
+  svg.append(el('text', { x: R / 2, y: -nameOff, class: 'wall-name' }, 'NORTH — window'));
+  svg.append(el('text', { x: R / 2, y: R + nameOff + 6, class: 'wall-name' }, 'SOUTH — closet & entry'));
+  svg.append(el('text', { x: -nameOff, y: R / 2, class: 'wall-name', transform: `rotate(-90 ${-nameOff} ${R / 2})` }, 'WEST — supply wall'));
+  svg.append(el('text', { x: R + nameOff, y: R / 2, class: 'wall-name', transform: `rotate(90 ${R + nameOff} ${R / 2})` }, 'EAST — machine station'));
   svg.append(el('text', { x: closet.x0 + leaf, y: R - 30, class: 'plan-note' }, 'closet'));
   svg.append(el('text', { x: entry.x0 + 40, y: R - 20, class: 'plan-note' }, 'entry'));
-  svg.append(el('text', { x: R / 2, y: -wt - 48, class: 'dim' }, `11′ × 11′  (1 square = 1 ft)`));
+  svg.append(el('text', { x: R / 2, y: -nameOff - 18, class: 'dim' }, `11′ 0″ × 11′ 0″  · 1 square = 1 ft · measurements along each wall show the furniture against it`));
 
   return svg;
 }
@@ -128,7 +245,15 @@ export function elevation(name, onSelect) {
   const W = WALLS[name];
   const H = ROOM.height;
   const pad = 40;
-  const svg = el('svg', { viewBox: `${-pad - 20} ${-pad} ${R + pad * 2 + 20} ${H + pad * 2}`, class: 'drawing elev' });
+  const summary = wallSummary(name);
+  const hasFurniture = summary.floorChain.some(s => !s.gap);
+  const rows = [
+    summary.openingChain && ['Openings', summary.openingChain],
+    hasFurniture && ['Furniture', summary.floorChain],
+    ['Wall', [{ l: 0, r: R, gap: false }]],
+  ].filter(Boolean);
+  const below = 16 + rows.length * 20;
+  const svg = el('svg', { viewBox: `${-pad - 30} ${-pad} ${R + pad * 2 + 30} ${H + pad + below}`, class: 'drawing elev' });
   const Y = y => H - y;
 
   svg.append(el('rect', { x: 0, y: 0, width: R, height: H, class: 'elev-wall' }));
@@ -192,7 +317,12 @@ export function elevation(name, onSelect) {
     svg.append(el('line', { x1: -12, x2: 0, y1: Y(y), y2: Y(y), class: 'dim-line' }));
     svg.append(el('text', { x: -16, y: Y(y) + 3, class: 'dim dim-left' }, feetInches(y)));
   }
-  svg.append(el('text', { x: R / 2, y: H + 28, class: 'dim' }, '11′ 0″'));
+  // Dimension chains along the wall: openings, furniture, then the whole wall.
+  rows.forEach(([label, segs], i) => {
+    const y = H + 24 + i * 20;
+    drawChain(svg, segs, (h, off) => [h, y + off], 0, label === 'Wall' ? 'chain-total' : '');
+    svg.append(el('text', { x: -8, y, class: 'chain-row' }, label));
+  });
   svg.append(el('text', { x: 0, y: -14, class: 'dim dim-start' }, W.title));
   return svg;
 }
