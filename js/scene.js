@@ -6,7 +6,7 @@ import { ROOM, PIECES } from './data.js';
 const R = ROOM.size;
 const H = ROOM.height;
 
-const COLORS = {
+export const COLORS = {
   white: '#f2f0eb',
   trim: '#f6f5f1',
   wood: '#c9a77c',
@@ -19,7 +19,7 @@ const COLORS = {
 // ---------------------------------------------------------------- helpers
 
 const matCache = new Map();
-function mat(color, opts = {}) {
+export function mat(color, opts = {}) {
   const key = color + JSON.stringify(opts);
   if (!matCache.has(key)) {
     matCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0, ...opts }));
@@ -27,7 +27,7 @@ function mat(color, opts = {}) {
   return matCache.get(key);
 }
 
-function box(x0, y0, z0, x1, y1, z1, material) {
+export function box(x0, y0, z0, x1, y1, z1, material) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), material);
   m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
   m.castShadow = true;
@@ -35,7 +35,7 @@ function box(x0, y0, z0, x1, y1, z1, material) {
   return m;
 }
 
-function cyl(x, y0, z, r, h, material, seg = 16) {
+export function cyl(x, y0, z, r, h, material, seg = 16) {
   const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), material);
   m.position.set(x, y0 + h / 2, z);
   m.castShadow = true;
@@ -283,7 +283,7 @@ function buildShell(wallMat) {
 
 const white = () => mat(COLORS.white);
 
-const BUILDERS = {
+export const BUILDERS = {
   besta(p, g) {
     g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1 - 1.6, white()));
     const w = (p.x1 - p.x0) / 2;
@@ -314,7 +314,7 @@ const BUILDERS = {
   },
 
   rod(p, g) {
-    g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, mat(COLORS.grey, { metalness: 0.5 })));
+    g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, mat(COLORS.trim)));
   },
 
   floorlamp(p, g) {

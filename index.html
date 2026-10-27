@@ -98,7 +98,7 @@
     <!-- Shopping list -->
     <section id="tab-list" class="tab">
       <div class="list-head">
-        <p class="lead">Prices are rough US estimates for budgeting – IKEA prices and stock change, so confirm on ikea.com. Each product links to an IKEA search.</p>
+        <p class="lead">Click a product’s name or picture for its details. Each product links to its IKEA US page. Prices are rough US estimates for budgeting – IKEA prices and stock change, so confirm on ikea.com.</p>
         <div class="list-actions">
           <button id="export-csv">Download CSV</button>
           <button id="print-list">Print</button>
@@ -153,6 +153,11 @@
       </div>
     </section>
   </main>
+
+  <dialog id="item-dialog" aria-label="Item details">
+    <button id="item-dialog-close" class="dialog-close" aria-label="Close">×</button>
+    <div id="item-dialog-body" class="item-card"></div>
+  </dialog>
 
   <script type="module" src="js/main.js"></script>
 </body>

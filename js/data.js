@@ -36,81 +36,81 @@ export const ZONES = {
 // IKEA prices and availability change, always confirm on ikea.com.
 export const PRODUCTS = [
   // --- Window seat -------------------------------------------------------
-  { key: 'besta-frame', zone: 'window', name: 'BESTÅ frame', spec: 'white, 120×40×38 cm', qty: 2, price: 70,
+  { key: 'besta-frame', url: 'https://www.ikea.com/us/en/p/besta-frame-white-60245844/', zone: 'window', name: 'BESTÅ frame', spec: 'white, 120×40×38 cm', qty: 2, price: 70,
     why: 'Base of the window seat: 240 cm (94.5″) wide, centred under the 69.5″ window with about 12.5″ to spare on each side. Set directly on the floor (no legs) and fix to the wall so the seat lands at ~46 cm with the cushion.' },
-  { key: 'besta-drawer', zone: 'window', name: 'BESTÅ drawer frame', spec: 'white, for 60 cm wide sections', qty: 4, price: 20,
+  { key: 'besta-drawer', url: 'https://www.ikea.com/us/en/p/besta-drawer-frame-white-80351517/', zone: 'window', name: 'BESTÅ drawer frame', spec: 'white, for 60 cm wide sections', qty: 4, price: 20,
     why: 'Four deep drawers under the seat for hand-embroidery hoops, floss boxes and projects in progress.' },
-  { key: 'besta-runner', zone: 'window', name: 'BESTÅ push-open drawer runner', spec: '1 pair per drawer', qty: 4, price: 15,
+  { key: 'besta-runner', url: 'https://www.ikea.com/us/en/p/besta-drawer-runner-push-open-30488315/', zone: 'window', name: 'BESTÅ push-open drawer runner', spec: '1 pair per drawer', qty: 4, price: 15,
     why: 'Handle-free fronts so nothing snags your legs while sitting.' },
-  { key: 'lappviken', zone: 'window', name: 'LAPPVIKEN drawer front', spec: 'white, 60×38 cm', qty: 4, price: 15,
+  { key: 'lappviken', url: 'https://www.ikea.com/us/en/p/lappviken-door-drawer-front-white-00291674/', zone: 'window', name: 'LAPPVIKEN drawer front', spec: 'white, 60×38 cm', qty: 4, price: 15,
     why: 'Clean flat fronts that read as a built-in.' },
-  { key: 'bench-cushion', zone: 'window', name: 'Bench / seat cushion', spec: 'IKEA bench-pad range, ~120 cm long', qty: 2, search: 'bench cushion', price: 40,
-    why: 'One cushion per 120 cm BESTÅ section. Measure the frames before buying – sizes vary by range.' },
-  { key: 'fjadermott', zone: 'window', name: 'FJÄDERMOTT inner cushion', spec: '50×50 cm', qty: 3, price: 10,
+  { key: 'bench-cushion', url: 'https://www.ikea.com/us/en/p/kuddarna-bench-pad-outdoor-light-grey-beige-80584183/', zone: 'window', name: 'KUDDARNA bench pad', spec: 'light grey-beige, 47¼×15¾″ (120×40 cm)', qty: 2, price: 40,
+    why: 'One pad per 120 cm BESTÅ section – the same length and depth as the frame. Sold as an outdoor pad, so it wipes clean.' },
+  { key: 'fjadermott', url: 'https://www.ikea.com/us/en/p/fjaedrar-inner-cushion-off-white-60262188/', zone: 'window', name: 'FJÄDRAR inner cushion', spec: 'off-white, 20×20″ (50×50 cm)', qty: 3, price: 10,
     why: 'Back support against the window wall.' },
-  { key: 'gurli', zone: 'window', name: 'GURLI cushion cover', spec: '50×50 cm', qty: 3, price: 5,
+  { key: 'gurli', url: 'https://www.ikea.com/us/en/p/gurli-cushion-cover-white-60598727/', zone: 'window', name: 'GURLI cushion cover', spec: 'white, 20×20″ (other colours available)', qty: 3, price: 5,
     why: 'Washable covers – easy to swap, or embroider your own later.' },
-  { key: 'hilja', zone: 'window', name: 'HILJA curtains, 1 pair', spec: 'white, light-filtering', qty: 1, price: 20,
+  { key: 'hilja', url: 'https://www.ikea.com/us/en/p/hilja-curtains-1-pair-white-50430818/', zone: 'window', name: 'HILJA curtains, 1 pair', spec: 'white, light-filtering', qty: 1, price: 20,
     why: 'Softens glare but keeps the daylight that hand embroidery needs.' },
-  { key: 'racka', zone: 'window', name: 'RÄCKA curtain rod combination', spec: 'extendable, 210–385 cm', qty: 1, price: 25,
+  { key: 'racka', url: 'https://www.ikea.com/us/en/p/raecka-curtain-rod-combination-with-wall-ceiling-brackets-with-finials-white-s09634074/', zone: 'window', name: 'RÄCKA curtain rod combination', spec: 'white, with finials, 82¾–151½″ (210–385 cm)', qty: 1, price: 25,
     why: 'The window is 69.5″ (177 cm) wide, so mount the rod ~110″ (280 cm) wide so the curtains stack beside the glass, not over it.' },
-  { key: 'hektar-floor', zone: 'window', name: 'HEKTAR floor lamp', spec: 'dark grey', qty: 1, price: 70,
+  { key: 'hektar-floor', url: 'https://www.ikea.com/us/en/p/hektar-floor-lamp-with-3-spotlights-dark-gray-40393618/', zone: 'window', name: 'HEKTAR floor lamp with 3 spotlights', spec: 'dark gray', qty: 1, price: 70,
     why: 'Adjustable task light over your shoulder for evening hand work.' },
 
   // --- Machine embroidery station -----------------------------------------
-  { key: 'karlby', zone: 'machine', name: 'KARLBY countertop', spec: '186×63.5×3.8 cm', qty: 1, price: 170,
+  { key: 'karlby', url: 'https://www.ikea.com/us/en/p/karlby-countertop-oak-veneer-70335207/', zone: 'machine', name: 'KARLBY countertop', spec: 'oak veneer, 74×1½″ (186×63.5×3.8 cm)', qty: 1, price: 170,
     why: 'Solid, deep, vibration-resistant top. 63.5 cm depth leaves room behind the machine for the embroidery arm and hoop to travel.' },
-  { key: 'alex-small', zone: 'machine', name: 'ALEX drawer unit', spec: 'white, 36×70 cm (5 drawers)', qty: 2, price: 110,
+  { key: 'alex-small', url: 'https://www.ikea.com/us/en/p/alex-drawer-unit-white-00473546/', zone: 'machine', name: 'ALEX drawer unit', spec: 'white, 36×70 cm (5 drawers)', qty: 2, price: 110,
     why: 'Legs of the desk. Bobbins, needles, stabilizer sheets, presser feet, USB sticks with designs.' },
-  { key: 'skadis-76', zone: 'machine', name: 'SKÅDIS pegboard', spec: 'white, 76×56 cm', qty: 2, price: 25,
+  { key: 'skadis-76', url: 'https://www.ikea.com/us/en/p/skadis-pegboard-white-10321618/', zone: 'machine', name: 'SKÅDIS pegboard', spec: 'white, 76×56 cm', qty: 2, price: 25,
     why: 'Hoops of every size hang within reach, plus scissors, tweezers and snips.' },
-  { key: 'skadis-hook', zone: 'machine', name: 'SKÅDIS hook', spec: '5-pack', qty: 4, price: 5,
+  { key: 'skadis-hook', url: 'https://www.ikea.com/us/en/p/skadis-hook-white-20320802/', zone: 'machine', name: 'SKÅDIS hook', spec: '5-pack', qty: 4, price: 5,
     why: 'Hoop hangers and tool hooks.' },
-  { key: 'skadis-container', zone: 'machine', name: 'SKÅDIS container with lid', spec: '', qty: 4, price: 6,
+  { key: 'skadis-container', url: 'https://www.ikea.com/us/en/p/skadis-container-with-lid-white-80335909/', zone: 'machine', name: 'SKÅDIS container with lid', spec: 'white, 3-pack', qty: 2, price: 8,
     why: 'Bobbins, needles, small notions.' },
-  { key: 'skadis-shelf', zone: 'machine', name: 'SKÅDIS shelf', spec: '', qty: 2, price: 10,
+  { key: 'skadis-shelf', url: 'https://www.ikea.com/us/en/p/skadis-shelf-white-00320799/', zone: 'machine', name: 'SKÅDIS shelf', spec: '', qty: 2, price: 10,
     why: 'Short shelves on the pegboard for spray adhesive and marking tools.' },
-  { key: 'lack-shelf', zone: 'machine', name: 'LACK wall shelf', spec: 'white, 110×26 cm', qty: 1, price: 30,
+  { key: 'lack-shelf', url: 'https://www.ikea.com/us/en/p/lack-wall-shelf-white-90282180/', zone: 'machine', name: 'LACK wall shelf', spec: 'white, 110×26 cm', qty: 1, price: 30,
     why: 'Thread cones in rainbow order above the pegboards.' },
-  { key: 'tertial', zone: 'machine', name: 'TERTIAL work lamp', spec: 'dark grey', qty: 2, price: 20,
+  { key: 'tertial', url: 'https://www.ikea.com/us/en/p/tertial-work-lamp-dark-gray-20355434/', zone: 'machine', name: 'TERTIAL work lamp', spec: 'dark gray', qty: 2, price: 20,
     why: 'Clamp-on task light aimed at the needle area of each machine.' },
-  { key: 'langfjall', zone: 'machine', name: 'LÅNGFJÄLL office chair', spec: 'with armrests', qty: 1, price: 230,
-    why: 'Height-adjustable so your elbows sit at machine bed height.' },
+  { key: 'langfjall', url: 'https://www.ikea.com/us/en/p/langfjaell-conference-chair-with-armrests-gunnared-beige-white-s89252768/', zone: 'machine', name: 'LÅNGFJÄLL chair with armrests', spec: 'Gunnared beige/white', qty: 1, price: 230,
+    why: 'Set the seat so your elbows sit at machine-bed height. IKEA US lists this as a conference chair – check its height range and base on the product page.' },
 
   // --- Supply wall --------------------------------------------------------
-  { key: 'kallax', zone: 'supply', name: 'KALLAX shelf unit', spec: 'white, 147×147 cm (4×4)', qty: 1, price: 140,
+  { key: 'kallax', url: 'https://www.ikea.com/us/en/p/kallax-shelf-unit-white-10637302/', zone: 'supply', name: 'KALLAX shelf unit', spec: 'white, 147×147 cm (4×4)', qty: 1, price: 140,
     why: 'Main supply wall: art supplies, fabric, yarn, paper pads, books.' },
-  { key: 'kallax-drawers', zone: 'supply', name: 'KALLAX insert with 2 drawers', spec: 'white', qty: 2, price: 40,
+  { key: 'kallax-drawers', url: 'https://www.ikea.com/us/en/p/kallax-insert-with-2-drawers-white-70286645/', zone: 'supply', name: 'KALLAX insert with 2 drawers', spec: 'white', qty: 2, price: 40,
     why: 'Paints, markers, pastels – messy things out of sight.' },
-  { key: 'kallax-door', zone: 'supply', name: 'KALLAX insert with door', spec: 'white', qty: 2, price: 30,
+  { key: 'kallax-door', url: 'https://www.ikea.com/us/en/p/kallax-insert-with-door-white-20278167/', zone: 'supply', name: 'KALLAX insert with door', spec: 'white', qty: 2, price: 30,
     why: 'Dust-free storage for finished pieces and good fabric.' },
-  { key: 'drona', zone: 'supply', name: 'DRÖNA box', spec: '33×38×33 cm', qty: 6, price: 5,
+  { key: 'drona', url: 'https://www.ikea.com/us/en/p/droena-box-white-30574006/', zone: 'supply', name: 'DRÖNA box', spec: 'white, 13×15×13″ (other colours available)', qty: 6, price: 5,
     why: 'Grab-and-go bins: yarn, felt, scraps, stuffing.' },
-  { key: 'tjena', zone: 'supply', name: 'TJENA magazine file, 2-pack', spec: 'white', qty: 3, price: 5,
+  { key: 'tjena', url: 'https://www.ikea.com/us/en/p/tjena-magazine-file-white-black-dotted-00601054/', zone: 'supply', name: 'TJENA magazine file, 2-pack', spec: 'white/black dotted', qty: 3, price: 5,
     why: 'Patterns, design printouts and catalogues on the open cubes.' },
-  { key: 'alex-9', zone: 'supply', name: 'ALEX drawer unit', spec: 'white, 36×116 cm (9 drawers)', qty: 2, price: 160,
+  { key: 'alex-9', url: 'https://www.ikea.com/us/en/p/alex-drawer-unit-with-9-drawers-white-90486139/', zone: 'supply', name: 'ALEX drawer unit', spec: 'white, 36×116 cm (9 drawers)', qty: 2, price: 160,
     why: 'Shallow drawers are ideal for beads and jewelry findings – one unit for beads, one for jewelry making (chains, clasps, wire, pliers).' },
-  { key: 'kuggis-small', zone: 'supply', name: 'KUGGIS box with lid', spec: '13×18×8 cm', qty: 12, price: 4,
+  { key: 'kuggis-small', url: 'https://www.ikea.com/us/en/p/kuggis-box-with-lid-white-s99561153/', zone: 'supply', name: 'KUGGIS box with lid', spec: 'white, 5×7×3¼″ (13×18×8 cm)', qty: 12, price: 4,
     why: 'Sort beads by colour/size inside the ALEX drawers. Measure drawer height before buying.' },
-  { key: 'mosslanda', zone: 'supply', name: 'MOSSLANDA picture ledge', spec: 'white, 115 cm', qty: 1, price: 15,
+  { key: 'mosslanda', url: 'https://www.ikea.com/us/en/p/mosslanda-picture-ledge-white-90292103/', zone: 'supply', name: 'MOSSLANDA picture ledge', spec: 'white, 115 cm', qty: 1, price: 15,
     why: 'Above the KALLAX – rotate finished hoops and art on display.' },
 
   // --- Centre table ------------------------------------------------------
-  { key: 'norden', zone: 'center', name: 'NORDEN gateleg table', spec: 'white, 26/89/152×80 cm', qty: 1, price: 250,
+  { key: 'norden', url: 'https://www.ikea.com/us/en/p/norden-gateleg-table-white-10423886/', zone: 'center', name: 'NORDEN gateleg table', spec: 'white, 26/89/152×80 cm', qty: 1, price: 250,
     why: 'Folds to 26 cm when you need floor space, opens to 152 cm for cutting fabric, laying out beading or big art. Drawers in the middle for rotary cutters and rulers.' },
-  { key: 'teodores', zone: 'center', name: 'TEODORES chair', spec: 'white', qty: 2, price: 35,
+  { key: 'teodores', url: 'https://www.ikea.com/us/en/p/teodores-chair-white-30486156/', zone: 'center', name: 'TEODORES chair', spec: 'white', qty: 2, price: 35,
     why: 'Light, wipeable chairs that tuck under the table.' },
-  { key: 'raskog', zone: 'center', name: 'RÅSKOG utility cart', spec: 'white, 35×45×78 cm', qty: 1, price: 40,
+  { key: 'raskog', url: 'https://www.ikea.com/us/en/p/raskog-utility-cart-white-30586783/', zone: 'center', name: 'RÅSKOG utility cart', spec: 'white, 35×45×78 cm', qty: 1, price: 40,
     why: 'Rolling caddy – roll it to the window seat for hand embroidery, or to the table for beading.' },
-  { key: 'lohals', zone: 'center', name: 'LOHALS rug, flatwoven', spec: 'natural, 160×230 cm', qty: 1, price: 80,
+  { key: 'lohals', url: 'https://www.ikea.com/us/en/p/lohals-rug-flatwoven-natural-50277393/', zone: 'center', name: 'LOHALS rug, flatwoven', spec: 'natural, 160×230 cm', qty: 1, price: 80,
     why: 'Flat weave so chairs roll and dropped beads are easy to find (unlike shag).' },
 
   // --- Closet / door wall ------------------------------------------------
-  { key: 'boaxel', zone: 'closet', name: 'BOAXEL wall uprights, brackets & shelves', spec: 'white, sized to closet', qty: 1, search: 'BOAXEL', price: 180,
+  { key: 'boaxel', url: 'https://www.ikea.com/us/en/cat/boaxel-storage-combinations-47396/', zone: 'closet', name: 'BOAXEL storage combination', spec: 'white, sized to closet', qty: 1, price: 180,
     why: 'Turns the closet into bulk storage: stabilizer rolls, batting, fabric bolts, machine cases. Measure closet width/depth, then use IKEA’s BOAXEL planner.' },
-  { key: 'kuggis-large', zone: 'closet', name: 'KUGGIS storage box with lid', spec: '26×35×15 cm', qty: 6, search: 'KUGGIS', price: 10,
+  { key: 'kuggis-large', url: 'https://www.ikea.com/us/en/p/kuggis-box-with-lid-white-s59561188/', zone: 'closet', name: 'KUGGIS box with lid', spec: 'white, 10¼×13¾×6″ (26×35×15 cm)', qty: 6, price: 10,
     why: 'Labelled boxes on the BOAXEL shelves: stabilizers by type, interfacing, seasonal projects.' },
-  { key: 'skadis-36', zone: 'closet', name: 'SKÅDIS pegboard', spec: 'white, 36×56 cm', qty: 1, price: 15,
+  { key: 'skadis-36', url: 'https://www.ikea.com/us/en/p/skadis-pegboard-white-50320805/', zone: 'closet', name: 'SKÅDIS pegboard', spec: 'white, 36×56 cm', qty: 1, price: 15,
     why: 'Fits the strip of wall between the closet and entry door: rulers, cutting mats, big shears.' },
 ];
 
@@ -183,7 +183,9 @@ export const WALL_COLORS = [
 
 export const productByKey = Object.fromEntries(PRODUCTS.map(p => [p.key, p]));
 
+// Direct product page when we have one, otherwise an IKEA search.
 export function ikeaUrl(p) {
-  const q = p.search || p.name.split(/[ ,]/)[0];
+  if (p.url) return p.url;
+  const q = p.search || p.name.replace(/,.*$/, '');
   return `https://www.ikea.com/us/en/search/?q=${encodeURIComponent(q)}`;
 }

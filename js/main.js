@@ -1,5 +1,6 @@
 import { PRODUCTS, ZONES, PHOTO_VIEWS, WALL_COLORS, productByKey, ikeaUrl } from './data.js';
 import { createRoom } from './scene.js';
+import { productImage } from './previews.js';
 import { floorPlan, elevation, WALL_NAMES, feetInches } from './drawings.js';
 
 const $ = s => document.querySelector(s);
@@ -13,19 +14,27 @@ const store = {
 
 // ------------------------------------------------------------ piece details
 
-function pieceHtml(piece) {
-  if (!piece) return '<h3>Click any piece</h3><p>Select furniture to see the IKEA product, size and what it stores.</p>';
-  const size = `${feetInches(piece.x1 - piece.x0)} × ${feetInches(piece.z1 - piece.z0)} footprint, ${feetInches(piece.y1 - piece.y0)} tall`;
-  if (!piece.p) return `<h3>${esc(piece.prop)}</h3><p>Shown for scale – not part of the shopping list.</p>`;
-  const prod = productByKey[piece.p];
+function productCard(prod, sizeNote) {
   const zone = ZONES[prod.zone];
+  const img = productImage(prod.key);
   return `
+    ${img ? `<figure class="item-figure">
+      <img class="item-img" src="${img}" alt="Rendering of the ${esc(prod.name)}">
+      <figcaption>Rendered from the plan · see IKEA for product photos</figcaption>
+    </figure>` : ''}
     <span class="tag" style="--c:${zone.color}">${esc(zone.name)}</span>
     <h3>${esc(prod.name)}</h3>
     <p class="spec">${esc(prod.spec)} · qty ${prod.qty} · est. ${money(prod.price * prod.qty)}</p>
     <p>${esc(prod.why)}</p>
-    <p class="muted">${size}</p>
-    <a href="${ikeaUrl(prod)}" target="_blank" rel="noopener">Find on IKEA →</a>`;
+    ${sizeNote ? `<p class="muted">${sizeNote}</p>` : ''}
+    <a class="item-link" href="${ikeaUrl(prod)}" target="_blank" rel="noopener">${prod.url ? 'View this item on IKEA' : 'Search for this item on IKEA'} ↗</a>`;
+}
+
+function pieceHtml(piece) {
+  if (!piece) return '<h3>Click any piece</h3><p>Select furniture to see a picture of the IKEA product, its size, what it stores and a link to buy it.</p>';
+  if (!piece.p) return `<h3>${esc(piece.prop)}</h3><p>Shown for scale – not part of the shopping list.</p>`;
+  const size = `${feetInches(piece.x1 - piece.x0)} × ${feetInches(piece.z1 - piece.z0)} footprint, ${feetInches(piece.y1 - piece.y0)} tall`;
+  return productCard(productByKey[piece.p], size);
 }
 
 // ------------------------------------------------------------ 3D tab
@@ -163,11 +172,12 @@ function renderList() {
       <div class="card zone-card">
         <h3><span class="dot" style="background:${z.color}"></span>${esc(z.name)} <span class="muted">· ${esc(z.wall)}</span><span class="sub">${money(sub)}</span></h3>
         <table>
-          <thead><tr><th class="chk">Got it</th><th>Product</th><th>Size / finish</th><th class="n">Qty</th><th class="n">Est. each</th><th class="n">Est. total</th><th>Use</th></tr></thead>
+          <thead><tr><th class="chk">Got it</th><th class="thumb"><span class="sr-only">Picture</span></th><th>Product</th><th>Size / finish</th><th class="n">Qty</th><th class="n">Est. each</th><th class="n">Est. total</th><th>Use</th></tr></thead>
           <tbody>${items.map(p => `
             <tr class="${owned.has(p.key) ? 'owned' : ''}">
               <td class="chk"><input type="checkbox" data-key="${p.key}" ${owned.has(p.key) ? 'checked' : ''} aria-label="Got ${esc(p.name)}"></td>
-              <td><a href="${ikeaUrl(p)}" target="_blank" rel="noopener">${esc(p.name)}</a></td>
+              <td class="thumb"><button class="thumb-btn" data-key="${p.key}" aria-label="Show details for ${esc(p.name)}"><img alt="" data-thumb="${p.key}"></button></td>
+              <td><button class="name-btn" data-key="${p.key}">${esc(p.name)}</button><br><a class="small-link" href="${ikeaUrl(p)}" target="_blank" rel="noopener">${p.url ? 'View on IKEA' : 'Search IKEA'} ↗</a></td>
               <td>${esc(p.spec)}</td>
               <td class="n">${p.qty}</td>
               <td class="n">${money(p.price)}</td>
@@ -191,7 +201,35 @@ function renderList() {
       renderList();
     };
   });
+  $('#shopping').querySelectorAll('.thumb-btn, .name-btn').forEach(b => (b.onclick = () => openItem(b.dataset.key)));
+  fillThumbs();
 }
+
+// Thumbnails are rendered a few at a time so the list appears immediately.
+function fillThumbs() {
+  const pending = [...document.querySelectorAll('img[data-thumb]:not([src])')];
+  const step = () => {
+    const start = performance.now();
+    while (pending.length && performance.now() - start < 30) {
+      const img = pending.shift();
+      const url = productImage(img.dataset.thumb);
+      if (url) img.src = url;
+    }
+    if (pending.length) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+const dialog = $('#item-dialog');
+function openItem(key) {
+  $('#item-dialog-body').innerHTML = productCard(productByKey[key]);
+  dialog.showModal();
+}
+$('#item-dialog-close').onclick = () => dialog.close();
+dialog.addEventListener('click', e => {
+  if (e.target === dialog) dialog.close();
+});
+
 renderList();
 
 // When hosted as a claude.ai artifact, downloads and printing are blocked,
