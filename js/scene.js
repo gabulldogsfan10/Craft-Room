@@ -677,23 +677,195 @@ export function createRoom(canvas, { onSelect } = {}) {
   }
 
   const camera = new THREE.PerspectiveCamera(55, 1, 1, 5000);
+
+  // Two ways to move around:
+  //   orbit – Overview / Top: circle the room like a dollhouse (OrbitControls).
+  //   look  – photo views: stand where the photo was taken and look around,
+  //           with zoom changing the lens instead of walking into a wall.
+  let mode = 'orbit';
+  let currentView = null;
+
   const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.maxPolarAngle = Math.PI / 2 - 0.02;
+  Object.assign(controls, {
+    enableDamping: true,
+    dampingFactor: 0.12,
+    rotateSpeed: 0.9,
+    zoomSpeed: 1.4,
+    zoomToCursor: true,
+    screenSpacePanning: true,
+    minDistance: 120,
+    maxDistance: 1400,
+    maxPolarAngle: Math.PI / 2 - 0.02,
+  });
+  // Keep panning near the room so it can't be lost off-screen.
+  controls.addEventListener('change', () => {
+    const t = controls.target;
+    t.set(THREE.MathUtils.clamp(t.x, -60, R + 60), THREE.MathUtils.clamp(t.y, 0, H), THREE.MathUtils.clamp(t.z, -60, R + 60));
+  });
+
+  const look = { yaw: 0, pitch: 0, minFov: 25, maxFov: 95 };
+  function applyLook() {
+    look.pitch = THREE.MathUtils.clamp(look.pitch, -1.25, 1.25);
+    const dir = new THREE.Vector3(
+      Math.sin(look.yaw) * Math.cos(look.pitch),
+      Math.sin(look.pitch),
+      Math.cos(look.yaw) * Math.cos(look.pitch),
+    );
+    camera.lookAt(camera.position.clone().add(dir));
+  }
+  function lookAtPoint(p) {
+    const d = p.clone().sub(camera.position);
+    look.yaw = Math.atan2(d.x, d.z);
+    look.pitch = Math.atan2(d.y, Math.hypot(d.x, d.z));
+    applyLook();
+  }
+  function setFov(f) {
+    camera.fov = THREE.MathUtils.clamp(f, look.minFov, look.maxFov);
+    camera.updateProjectionMatrix();
+  }
 
   const VIEWS = {
     overview: { pos: [R + 260, 470, R + 330], target: [R / 2, 40, R / 2], fov: 50 },
     top: { pos: [R / 2, 720, R / 2 + 1], target: [R / 2, 0, R / 2], fov: 45 },
   };
 
+  let tween = null;
   function setView(v) {
+    currentView = v;
+    tween = null;
     camera.fov = v.fov || 78;
-    camera.position.set(...v.pos);
-    controls.target.set(...v.target);
     camera.updateProjectionMatrix();
-    controls.update();
+    camera.position.set(...v.pos);
+    const inside = v.pos[0] > 0 && v.pos[0] < R && v.pos[2] > 0 && v.pos[2] < R && v.pos[1] < H;
+    mode = inside ? 'look' : 'orbit';
+    controls.enabled = mode === 'orbit';
+    if (mode === 'orbit') {
+      controls.target.set(...v.target);
+      controls.update();
+    } else {
+      lookAtPoint(new THREE.Vector3(...v.target));
+    }
+    canvas.dataset.mode = mode;
+    return mode;
   }
   setView(VIEWS.overview);
+
+  // Look-mode input: drag to turn, wheel or pinch to zoom.
+  const pointers = new Map();
+  let pinch = null;
+  canvas.addEventListener('pointerdown', e => {
+    if (mode !== 'look') return;
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinch = { dist: Math.hypot(a[0] - b[0], a[1] - b[1]), fov: camera.fov };
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (mode !== 'look' || !pointers.has(e.pointerId)) return;
+    const [px, py] = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 1) {
+      // Scale by the lens so turning feels the same zoomed in or out.
+      const k = (camera.fov * Math.PI) / 180 / canvas.clientHeight;
+      look.yaw += (e.clientX - px) * k;
+      look.pitch += (e.clientY - py) * k;
+      applyLook();
+    } else if (pinch) {
+      const [a, b] = [...pointers.values()];
+      setFov(pinch.fov * (pinch.dist / Math.max(Math.hypot(a[0] - b[0], a[1] - b[1]), 1)));
+    }
+  });
+  const endPointer = e => {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch = null;
+  };
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('wheel', e => {
+    if (mode !== 'look') return;
+    e.preventDefault();
+    setFov(camera.fov * Math.exp(e.deltaY * 0.0012));
+  }, { passive: false });
+
+  // Shared actions for the on-screen buttons and keyboard.
+  const spherical = new THREE.Spherical();
+  const offset = new THREE.Vector3();
+  function zoom(f) {
+    if (mode === 'look') return setFov(camera.fov * f);
+    offset.copy(camera.position).sub(controls.target);
+    offset.setLength(THREE.MathUtils.clamp(offset.length() * f, controls.minDistance, controls.maxDistance));
+    camera.position.copy(controls.target).add(offset);
+  }
+  function rotate(dYaw, dPitch) {
+    if (mode === 'look') {
+      look.yaw += dYaw;
+      look.pitch += dPitch;
+      return applyLook();
+    }
+    offset.copy(camera.position).sub(controls.target);
+    spherical.setFromVector3(offset);
+    spherical.theta += dYaw;
+    spherical.phi = THREE.MathUtils.clamp(spherical.phi - dPitch, 0.05, controls.maxPolarAngle);
+    offset.setFromSpherical(spherical);
+    camera.position.copy(controls.target).add(offset);
+  }
+
+  // Held buttons/keys apply a little every frame for smooth movement.
+  const held = { zoom: 0, yaw: 0, pitch: 0 };
+  function hold(action, dir) {
+    held[action] = dir;
+  }
+  function applyHeld() {
+    if (held.zoom) zoom(held.zoom > 0 ? 0.975 : 1 / 0.975);
+    if (held.yaw || held.pitch) rotate(held.yaw * 0.025, held.pitch * 0.018);
+  }
+
+  const KEYS = {
+    ArrowLeft: ['yaw', 1], ArrowRight: ['yaw', -1], ArrowUp: ['pitch', 1], ArrowDown: ['pitch', -1],
+    '+': ['zoom', 1], '=': ['zoom', 1], '-': ['zoom', -1], _: ['zoom', -1],
+  };
+  canvas.tabIndex = 0;
+  canvas.addEventListener('keydown', e => {
+    const k = KEYS[e.key];
+    if (!k) return;
+    e.preventDefault();
+    hold(...k);
+  });
+  canvas.addEventListener('keyup', e => {
+    const k = KEYS[e.key];
+    if (k) hold(k[0], 0);
+  });
+  canvas.addEventListener('blur', () => Object.keys(held).forEach(k => (held[k] = 0)));
+
+  // Double-click a piece to zoom to it.
+  function focusOn(g) {
+    const box = new THREE.Box3().setFromObject(g);
+    const center = box.getCenter(new THREE.Vector3());
+    if (mode === 'look') {
+      lookAtPoint(center);
+      return setFov(45);
+    }
+    const size = box.getSize(new THREE.Vector3()).length();
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    tween = {
+      t: 0,
+      fromPos: camera.position.clone(),
+      fromTarget: controls.target.clone(),
+      toTarget: center,
+      toPos: center.clone().add(dir.multiplyScalar(Math.max(size * 1.6, controls.minDistance + 30))),
+    };
+  }
+  function stepTween() {
+    if (!tween) return;
+    tween.t = Math.min(tween.t + 0.06, 1);
+    const e = 1 - Math.pow(1 - tween.t, 3);
+    camera.position.lerpVectors(tween.fromPos, tween.toPos, e);
+    controls.target.lerpVectors(tween.fromTarget, tween.toTarget, e);
+    if (tween.t === 1) tween = null;
+  }
+  controls.addEventListener('start', () => (tween = null));
 
   // Selection outline
   let outline = null;
@@ -711,18 +883,26 @@ export function createRoom(canvas, { onSelect } = {}) {
   }
 
   const ray = new THREE.Raycaster();
-  let down = null;
-  canvas.addEventListener('pointerdown', e => (down = [e.clientX, e.clientY]));
-  canvas.addEventListener('pointerup', e => {
-    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  function pieceAt(e) {
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     const hit = ray.intersectObjects(pieces.children, true)[0];
     let o = hit && hit.object;
     while (o && !o.userData.piece) o = o.parent;
-    const piece = o ? o.userData.piece : null;
+    return o || null;
+  }
+  let down = null;
+  canvas.addEventListener('pointerdown', e => (down = [e.clientX, e.clientY]));
+  canvas.addEventListener('pointerup', e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+    const g = pieceAt(e);
+    const piece = g ? g.userData.piece : null;
     select(piece && piece.id);
     onSelect && onSelect(piece);
+  });
+  canvas.addEventListener('dblclick', e => {
+    const g = pieceAt(e);
+    if (g) focusOn(g);
   });
 
   function resize() {
@@ -739,7 +919,9 @@ export function createRoom(canvas, { onSelect } = {}) {
   function loop() {
     if (running) {
       resize();
-      controls.update();
+      applyHeld();
+      stepTween();
+      if (mode === 'orbit') controls.update();
       updateCutaway(camera);
       renderer.render(scene, camera);
     }
@@ -772,6 +954,8 @@ export function createRoom(canvas, { onSelect } = {}) {
   return {
     views: VIEWS,
     setView,
+    hold,
+    reset: () => currentView && setView(currentView),
     select,
     snapshot,
     setWallColor: c => wallMat.color.set(c),

@@ -56,14 +56,46 @@ $('#show-machines').onchange = e => {
   snapshotsStale = true;
 };
 
+const HINTS = {
+  orbit: 'Drag to rotate · scroll or pinch to zoom · right-drag or two fingers to move · double-click a piece to zoom to it',
+  look: 'You’re standing where the photo was taken. Drag to look around · scroll or pinch to zoom · double-click a piece to look at it',
+};
+function showView(v) {
+  $('#view-hint').textContent = HINTS[room.setView(v)];
+}
+showView(room.views.overview);
+
 document.querySelectorAll('[data-view]').forEach(b => {
   b.onclick = () => {
     const v = b.dataset.view;
-    const photo = PHOTO_VIEWS.find(p => `photo-${p.n}` === v);
-    room.setView(photo || room.views[v]);
+    showView(PHOTO_VIEWS.find(p => `photo-${p.n}` === v) || room.views[v]);
     document.querySelectorAll('[data-view]').forEach(x => x.classList.toggle('on', x === b));
   };
 });
+
+// Press-and-hold buttons for zooming and turning.
+document.querySelectorAll('[data-hold]').forEach(b => {
+  const action = b.dataset.hold;
+  const start = e => {
+    e.preventDefault();
+    b.setPointerCapture(e.pointerId);
+    room.hold(action, Number(b.dataset.dir));
+  };
+  const stop = () => room.hold(action, 0);
+  b.addEventListener('pointerdown', start);
+  b.addEventListener('pointerup', stop);
+  b.addEventListener('pointercancel', stop);
+  b.addEventListener('lostpointercapture', stop);
+  b.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      room.hold(action, Number(b.dataset.dir));
+    }
+  });
+  b.addEventListener('keyup', stop);
+  b.addEventListener('blur', stop);
+});
+$('#reset-view').onclick = () => room.reset();
 
 $('#zone-legend').innerHTML = '<h3>Zones</h3>' + Object.values(ZONES)
   .map(z => `<div class="legend-row"><span class="dot" style="background:${z.color}"></span><span><b>${esc(z.wall)}</b> – ${esc(z.name)}</span></div>`).join('');

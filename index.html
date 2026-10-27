@@ -35,16 +35,29 @@
     <section id="tab-render" class="tab active">
       <div class="render-layout">
         <div class="viewport">
-          <canvas id="room-canvas"></canvas>
-          <div class="view-buttons">
-            <button data-view="overview" class="on">Overview</button>
-            <button data-view="top">Top</button>
-            <button data-view="photo-1">Photo 1 view</button>
-            <button data-view="photo-2">Photo 2 view</button>
-            <button data-view="photo-3">Photo 3 view</button>
-            <button data-view="photo-4">Photo 4 view</button>
+          <div class="stage">
+            <canvas id="room-canvas" aria-label="3D view of the craft room. Use the arrow keys to turn and plus or minus to zoom."></canvas>
+            <div class="view-buttons">
+              <button data-view="overview" class="on">Overview</button>
+              <button data-view="top">Top</button>
+              <button data-view="photo-1">Photo 1 view</button>
+              <button data-view="photo-2">Photo 2 view</button>
+              <button data-view="photo-3">Photo 3 view</button>
+              <button data-view="photo-4">Photo 4 view</button>
+            </div>
+            <div class="nav-pad" aria-label="Camera controls">
+              <button data-hold="zoom" data-dir="1" aria-label="Zoom in" title="Zoom in (+)">+</button>
+              <button data-hold="zoom" data-dir="-1" aria-label="Zoom out" title="Zoom out (−)">−</button>
+              <span class="sep"></span>
+              <button data-hold="yaw" data-dir="1" aria-label="Turn left" title="Turn left (←)">↺</button>
+              <button data-hold="yaw" data-dir="-1" aria-label="Turn right" title="Turn right (→)">↻</button>
+              <button data-hold="pitch" data-dir="1" aria-label="Tilt up" title="Tilt up (↑)">↑</button>
+              <button data-hold="pitch" data-dir="-1" aria-label="Tilt down" title="Tilt down (↓)">↓</button>
+              <span class="sep"></span>
+              <button id="reset-view" class="wide" title="Back to the starting angle">Reset</button>
+            </div>
           </div>
-          <p class="hint">Drag to orbit · scroll to zoom · right-drag to pan · click a piece for details</p>
+          <p class="hint" id="view-hint"></p>
         </div>
         <aside class="side">
           <div class="card" id="piece-info">
