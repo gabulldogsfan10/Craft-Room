@@ -41,7 +41,7 @@ It also works as-is on GitHub Pages.
 All measurements, furniture positions and products live in `js/data.js`. Units
 are centimetres, with x running west→east and z running north→south. The 3D
 model, plan, elevations and shopping list are all generated from that file.
-Window, door and ceiling sizes are estimated from the photos, so measure the
-real room and update `ROOM`.
+The window width (69.5″) is measured. The sill height, door and ceiling sizes are
+estimated from the photos, so measure those and update `ROOM`.
 
 Prices are rough US estimates. Always confirm sizes, prices and availability on ikea.com.

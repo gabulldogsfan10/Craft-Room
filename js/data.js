@@ -17,7 +17,8 @@ export const FT = 30.48;
 export const ROOM = {
   size: 11 * FT, // 11 ft x 11 ft
   height: 8 * FT, // assumed 8 ft ceiling
-  window: { x0: 92, x1: 243, sill: 70, head: 215 },
+  // 69.5 in wide (measured), centred on the wall; sill and head heights are estimates.
+  window: { x0: 11 * FT / 2 - (69.5 * 2.54) / 2, x1: 11 * FT / 2 + (69.5 * 2.54) / 2, sill: 70, head: 215 },
   closet: { x0: 25, x1: 180, head: 205, leaf: 77 }, // two leaves, swing into room
   entry: { x0: 240, x1: 322, head: 205, hingeX: 322 }, // hinged on east jamb
   switchX: 231,
@@ -36,7 +37,7 @@ export const ZONES = {
 export const PRODUCTS = [
   // --- Window seat -------------------------------------------------------
   { key: 'besta-frame', zone: 'window', name: 'BESTÅ frame', spec: 'white, 120×40×38 cm', qty: 2, price: 70,
-    why: 'Base of the window seat. Set directly on the floor (no legs) and fix to the wall so the seat lands at ~46 cm with the cushion.' },
+    why: 'Base of the window seat: 240 cm (94.5″) wide, centred under the 69.5″ window with about 12.5″ to spare on each side. Set directly on the floor (no legs) and fix to the wall so the seat lands at ~46 cm with the cushion.' },
   { key: 'besta-drawer', zone: 'window', name: 'BESTÅ drawer frame', spec: 'white, for 60 cm wide sections', qty: 4, price: 20,
     why: 'Four deep drawers under the seat for hand-embroidery hoops, floss boxes and projects in progress.' },
   { key: 'besta-runner', zone: 'window', name: 'BESTÅ push-open drawer runner', spec: '1 pair per drawer', qty: 4, price: 15,
@@ -51,8 +52,8 @@ export const PRODUCTS = [
     why: 'Washable covers – easy to swap, or embroider your own later.' },
   { key: 'hilja', zone: 'window', name: 'HILJA curtains, 1 pair', spec: 'white, light-filtering', qty: 1, price: 20,
     why: 'Softens glare but keeps the daylight that hand embroidery needs.' },
-  { key: 'racka', zone: 'window', name: 'RÄCKA curtain rod combination', spec: 'extendable', qty: 1, price: 20,
-    why: 'Mount wide so curtains stack beside the glass, not over it.' },
+  { key: 'racka', zone: 'window', name: 'RÄCKA curtain rod combination', spec: 'extendable, 210–385 cm', qty: 1, price: 25,
+    why: 'The window is 69.5″ (177 cm) wide, so mount the rod ~110″ (280 cm) wide so the curtains stack beside the glass, not over it.' },
   { key: 'hektar-floor', zone: 'window', name: 'HEKTAR floor lamp', spec: 'dark grey', qty: 1, price: 70,
     why: 'Adjustable task light over your shoulder for evening hand work.' },
 
@@ -125,9 +126,9 @@ export const PIECES = [
   { id: 'pil-1', p: 'fjadermott', kind: 'pillow', x0: 60, z0: 2, x1: 108, z1: 16, y0: 46, y1: 92, color: '#d9c7b3' },
   { id: 'pil-2', p: 'fjadermott', kind: 'pillow', x0: 143, z0: 2, x1: 191, z1: 16, y0: 46, y1: 92, color: '#a77aa4' },
   { id: 'pil-3', p: 'fjadermott', kind: 'pillow', x0: 226, z0: 2, x1: 274, z1: 16, y0: 46, y1: 92, color: '#d9c7b3' },
-  { id: 'curtain-w', p: 'hilja', kind: 'curtain', x0: 62, z0: 4, x1: 104, z1: 9, y0: 50, y1: 228 },
-  { id: 'curtain-e', p: 'hilja', kind: 'curtain', x0: 231, z0: 4, x1: 273, z1: 9, y0: 50, y1: 228 },
-  { id: 'rod', p: 'racka', kind: 'rod', x0: 55, z0: 5, x1: 280, z1: 8, y0: 228, y1: 230 },
+  { id: 'curtain-w', p: 'hilja', kind: 'curtain', x0: 34, z0: 4, x1: 76, z1: 9, y0: 50, y1: 228 },
+  { id: 'curtain-e', p: 'hilja', kind: 'curtain', x0: 259, z0: 4, x1: 301, z1: 9, y0: 50, y1: 228 },
+  { id: 'rod', p: 'racka', kind: 'rod', x0: 28, z0: 5, x1: 307, z1: 8, y0: 228, y1: 230 },
   { id: 'floorlamp', p: 'hektar-floor', kind: 'floorlamp', x0: 297, z0: 8, x1: 327, z1: 38, y0: 0, y1: 160 },
 
   // East – machine embroidery station
