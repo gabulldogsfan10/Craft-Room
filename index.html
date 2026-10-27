@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Craft Room Planner</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/controls/OrbitControls.js": "./vendor/three/controls/OrbitControls.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Craft Room Planner</h1>
+      <p class="sub">11′ × 11′ room · machine &amp; hand embroidery, beading, jewelry, art · all-IKEA starter plan</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="render" aria-selected="true">3D Rendering</button>
+      <button role="tab" data-tab="photos">Before &amp; After</button>
+      <button role="tab" data-tab="plan">Floor Plan</button>
+      <button role="tab" data-tab="walls">Wall Elevations</button>
+      <button role="tab" data-tab="list">IKEA Shopping List</button>
+      <button role="tab" data-tab="notes">Design Notes</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 3D -->
+    <section id="tab-render" class="tab active">
+      <div class="render-layout">
+        <div class="viewport">
+          <canvas id="room-canvas"></canvas>
+          <div class="view-buttons">
+            <button data-view="overview" class="on">Overview</button>
+            <button data-view="top">Top</button>
+            <button data-view="photo-1">Photo 1 view</button>
+            <button data-view="photo-2">Photo 2 view</button>
+            <button data-view="photo-3">Photo 3 view</button>
+            <button data-view="photo-4">Photo 4 view</button>
+          </div>
+          <p class="hint">Drag to orbit · scroll to zoom · right-drag to pan · click a piece for details</p>
+        </div>
+        <aside class="side">
+          <div class="card" id="piece-info">
+            <h3>Click any piece</h3>
+            <p>Select furniture in the rendering to see the IKEA product, size and what it stores.</p>
+          </div>
+          <div class="card">
+            <h3>Wall colour</h3>
+            <div class="swatches" id="swatches"></div>
+          </div>
+          <div class="card">
+            <h3>Show</h3>
+            <label><input type="checkbox" id="show-machines" checked> Your machines (not purchased)</label>
+          </div>
+          <div class="card zones" id="zone-legend"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Before / after -->
+    <section id="tab-photos" class="tab">
+      <p class="lead">Each rendering is taken from roughly where the matching photo was shot. Everything except the walls, window and doors has been replaced with the IKEA plan.
+        Want to use different photos? Use “Replace photo” on any card – they stay on your computer.</p>
+      <div id="compare" class="compare"></div>
+    </section>
+
+    <!-- Plan -->
+    <section id="tab-plan" class="tab">
+      <div class="drawing-wrap" id="plan"></div>
+      <div class="card" id="plan-info"><h3>Click a piece on the plan</h3></div>
+    </section>
+
+    <!-- Elevations -->
+    <section id="tab-walls" class="tab">
+      <div class="elev-grid" id="elevations"></div>
+    </section>
+
+    <!-- Shopping list -->
+    <section id="tab-list" class="tab">
+      <div class="list-head">
+        <p class="lead">Prices are rough US estimates for budgeting – IKEA prices and stock change, so confirm on ikea.com. Each product links to an IKEA search.</p>
+        <div class="list-actions">
+          <button id="export-csv">Download CSV</button>
+          <button id="print-list">Print</button>
+        </div>
+      </div>
+      <div id="shopping"></div>
+    </section>
+
+    <!-- Notes -->
+    <section id="tab-notes" class="tab notes">
+      <div class="card">
+        <h3>How the room works</h3>
+        <ul>
+          <li><b>Four zones, one per wall.</b> Machine embroidery on the long blank east wall, hand embroidery in the daylight of the window seat, beading/jewelry/art supplies on the west wall, bulk storage in the closet.</li>
+          <li><b>Centre stays flexible.</b> The NORDEN gateleg table folds to 26 cm, so the floor clears for laying out fabric or opening the closet fully; opened to 152 cm it is a cutting and beading table.</li>
+          <li><b>Door swings are kept clear.</b> The east counter stops before the entry door, and nothing sits in the arc of the closet doors (see the floor plan).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Machine embroidery</h3>
+        <ul>
+          <li>The KARLBY counter is 63.5 cm deep: room for the embroidery unit and hoop to travel without hitting the wall. Keep ~15 cm clear behind and to the left of the machine.</li>
+          <li>Counter height lands at ~74 cm – comfortable sewing height. Adjust the LÅNGFJÄLL chair so your forearms are level with the machine bed.</li>
+          <li>Hoops hang on the SKÅDIS pegboards; thread cones line the LACK shelf; the ALEX drawers hold stabilizer, bobbins, needles and design USB sticks.</li>
+          <li>Plan for outlets: there is one on this wall today. Use a surge-protected power strip mounted under the counter.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Hand embroidery &amp; the window seat</h3>
+        <ul>
+          <li>Two BESTÅ 120 frames on the floor (no legs) make a 240 cm seat centred on the window; with the cushion the seat is ~46 cm – standard chair height.</li>
+          <li>Four deep drawers hold hoops, floss boxes and works-in-progress. Push-open runners keep the fronts handle-free.</li>
+          <li>North light is even and shadow-free – ideal for stitching. The HEKTAR floor lamp covers evenings; the RÅSKOG cart rolls over with your floss.</li>
+          <li>Anchor the BESTÅ frames to the wall – they will be stood and knelt on.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Beading, jewelry &amp; art</h3>
+        <ul>
+          <li>The two ALEX 9-drawer units have shallow drawers – the best format for beads and findings. KUGGIS lidded boxes keep colours separate and can be carried to the table.</li>
+          <li>The KALLAX 4×4 mixes closed storage (drawers/doors for paint and markers), DRÖNA bins (yarn, felt, scraps) and open cubes (pads, books, pattern files).</li>
+          <li>Work on a light surface: lay a light cutting mat or bead board on the NORDEN when beading so dropped beads are easy to spot.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Before you buy</h3>
+        <ul>
+          <li>Measure the window width, sill height and the closet interior – the drawing assumes a ~150 cm window, 70 cm sill and an 8′ ceiling.</li>
+          <li>Confirm every IKEA size on ikea.com; product lines are refreshed often.</li>
+          <li>Secure all tall pieces (KALLAX, ALEX 9-drawer) to the wall with the included anti-tip hardware.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
