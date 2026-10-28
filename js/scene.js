@@ -726,7 +726,14 @@ export function createRoom(canvas, { onSelect } = {}) {
 
   const VIEWS = {
     // `fit`: start as close as possible with the whole room still in view.
-    overview: { pos: [R + 260, 470, R + 330], target: [R / 2, 70, R / 2], fov: 50, fit: true },
+    // Starts behind the closet doors (south wall), lined up with their centre,
+    // looking north across the room toward the window.
+    overview: {
+      pos: [(ROOM.closet.x0 + ROOM.closet.x1) / 2, 430, R + 420],
+      target: [(ROOM.closet.x0 + ROOM.closet.x1) / 2, 70, R / 2],
+      fov: 50,
+      fit: true,
+    },
     top: { pos: [R / 2, 720, R / 2 + 1], target: [R / 2, 0, R / 2], fov: 45, fit: true },
   };
 
