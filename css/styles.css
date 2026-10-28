@@ -232,6 +232,7 @@ dialog#item-dialog::backdrop { background: rgb(20 12 26 / 0.45); }
 
 @media (max-width: 900px) {
   .render-layout, #tab-plan.active { grid-template-columns: 1fr; }
+  #room-canvas { height: min(72vh, 125vw); }
   .nav-pad { left: 8px; right: 8px; bottom: 8px; justify-content: center; gap: 4px; padding: 4px; }
   .nav-pad button { width: 38px; height: 38px; }
   .nav-pad .sep { display: none; }

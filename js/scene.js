@@ -725,9 +725,42 @@ export function createRoom(canvas, { onSelect } = {}) {
   }
 
   const VIEWS = {
-    overview: { pos: [R + 260, 470, R + 330], target: [R / 2, 40, R / 2], fov: 50 },
-    top: { pos: [R / 2, 720, R / 2 + 1], target: [R / 2, 0, R / 2], fov: 45 },
+    // `fit`: start as close as possible with the whole room still in view.
+    overview: { pos: [R + 260, 470, R + 330], target: [R / 2, 70, R / 2], fov: 50, fit: true },
+    top: { pos: [R / 2, 720, R / 2 + 1], target: [R / 2, 0, R / 2], fov: 45, fit: true },
   };
+
+  // Closest distance along the view's direction where every corner of the
+  // room fits inside the frame (with a small margin for the buttons).
+  const roomCorners = [];
+  for (const x of [0, R]) for (const y of [0, H]) for (const z of [0, R]) roomCorners.push(new THREE.Vector3(x, y, z));
+  function fitDistance(v) {
+    const target = new THREE.Vector3(...v.target);
+    const dir = new THREE.Vector3(...v.pos).sub(target).normalize();
+    const probe = camera.clone();
+    probe.fov = v.fov;
+    probe.aspect = camera.aspect;
+    probe.updateProjectionMatrix();
+    const fits = d => {
+      probe.position.copy(target).addScaledVector(dir, d);
+      probe.lookAt(target);
+      probe.updateMatrixWorld();
+      return roomCorners.every(c => {
+        const p = c.clone().project(probe);
+        return Math.abs(p.x) < 0.94 && p.y < 0.8 && p.y > -0.94 && p.z < 1;
+      });
+    };
+    let lo = 150;
+    let hi = 3000;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) hi = mid;
+      else lo = mid;
+    }
+    return { target, pos: target.clone().addScaledVector(dir, hi) };
+  }
+  // Re-fit when the canvas changes shape, until the person moves the camera.
+  let autoFit = true;
 
   let tween = null;
   function setView(v) {
@@ -740,7 +773,14 @@ export function createRoom(canvas, { onSelect } = {}) {
     mode = inside ? 'look' : 'orbit';
     controls.enabled = mode === 'orbit';
     if (mode === 'orbit') {
-      controls.target.set(...v.target);
+      autoFit = Boolean(v.fit);
+      if (v.fit) {
+        const f = fitDistance(v);
+        camera.position.copy(f.pos);
+        controls.target.copy(f.target);
+      } else {
+        controls.target.set(...v.target);
+      }
       controls.update();
     } else {
       lookAtPoint(new THREE.Vector3(...v.target));
@@ -818,6 +858,7 @@ export function createRoom(canvas, { onSelect } = {}) {
     held[action] = dir;
   }
   function applyHeld() {
+    if (held.zoom || held.yaw || held.pitch) autoFit = false;
     if (held.zoom) zoom(held.zoom > 0 ? 0.975 : 1 / 0.975);
     if (held.yaw || held.pitch) rotate(held.yaw * 0.025, held.pitch * 0.018);
   }
@@ -841,6 +882,7 @@ export function createRoom(canvas, { onSelect } = {}) {
 
   // Double-click a piece to zoom to it.
   function focusOn(g) {
+    autoFit = false;
     const box = new THREE.Box3().setFromObject(g);
     const center = box.getCenter(new THREE.Vector3());
     if (mode === 'look') {
@@ -865,7 +907,10 @@ export function createRoom(canvas, { onSelect } = {}) {
     controls.target.lerpVectors(tween.fromTarget, tween.toTarget, e);
     if (tween.t === 1) tween = null;
   }
-  controls.addEventListener('start', () => (tween = null));
+  controls.addEventListener('start', () => {
+    tween = null;
+    autoFit = false;
+  });
 
   // Selection outline
   let outline = null;
@@ -912,6 +957,7 @@ export function createRoom(canvas, { onSelect } = {}) {
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      if (autoFit && mode === 'orbit' && currentView) setView(currentView);
     }
   }
 
