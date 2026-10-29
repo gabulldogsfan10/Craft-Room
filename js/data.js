@@ -165,15 +165,15 @@ export const PRODUCTS = [
 const R = ROOM.size;
 export const PIECES = [
   // North – window seat (2 × 47¼″ BESTÅ frames centred on the window)
-  { id: 'seat-w', only: 'a', p: 'besta-frame', kind: 'besta', x0: 47.5, z0: 0, x1: 167.5, z1: 40, y0: 0, y1: 38 },
-  { id: 'seat-e', only: 'a', p: 'besta-frame', kind: 'besta', x0: 167.5, z0: 0, x1: 287.5, z1: 40, y0: 0, y1: 38 },
+  { id: 'seat-w', only: 'a', p: 'besta-frame', kind: 'besta', x0: 47.5, z0: 0, x1: 167.5, z1: 40, y0: 0, y1: 38, extras: [{ p: 'besta-drawer', qty: 2 }, { p: 'besta-runner', qty: 2 }, { p: 'lappviken', qty: 2 }] },
+  { id: 'seat-e', only: 'a', p: 'besta-frame', kind: 'besta', x0: 167.5, z0: 0, x1: 287.5, z1: 40, y0: 0, y1: 38, extras: [{ p: 'besta-drawer', qty: 2 }, { p: 'besta-runner', qty: 2 }, { p: 'lappviken', qty: 2 }] },
   { id: 'cush-w', only: 'a', p: 'bench-cushion', kind: 'cushion', x0: 48.5, z0: 1, x1: 166.5, z1: 40, y0: 38, y1: 46 },
   { id: 'cush-e', only: 'a', p: 'bench-cushion', kind: 'cushion', x0: 168.5, z0: 1, x1: 286.5, z1: 40, y0: 38, y1: 46 },
-  { id: 'pil-1', only: 'a', p: 'fjadermott', kind: 'pillow', x0: 60, z0: 2, x1: 108, z1: 16, y0: 46, y1: 92, color: '#f6f3ec' },
-  { id: 'pil-2', only: 'a', p: 'fjadermott', kind: 'pillow', x0: 143, z0: 2, x1: 191, z1: 16, y0: 46, y1: 92, color: '#f6f3ec' },
-  { id: 'pil-3', only: 'a', p: 'fjadermott', kind: 'pillow', x0: 226, z0: 2, x1: 274, z1: 16, y0: 46, y1: 92, color: '#f6f3ec' },
-  { id: 'curtain-w', only: 'a', p: 'hilja', kind: 'curtain', x0: 34, z0: 4, x1: 76, z1: 9, y0: 50, y1: 228 },
-  { id: 'curtain-e', only: 'a', p: 'hilja', kind: 'curtain', x0: 259, z0: 4, x1: 301, z1: 9, y0: 50, y1: 228 },
+  { id: 'pil-1', only: 'a', p: 'fjadermott', kind: 'pillow', x0: 60, z0: 2, x1: 108, z1: 16, y0: 46, y1: 92, color: '#f6f3ec', extras: [{ p: 'gurli', qty: 1 }] },
+  { id: 'pil-2', only: 'a', p: 'fjadermott', kind: 'pillow', x0: 143, z0: 2, x1: 191, z1: 16, y0: 46, y1: 92, color: '#f6f3ec', extras: [{ p: 'gurli', qty: 1 }] },
+  { id: 'pil-3', only: 'a', p: 'fjadermott', kind: 'pillow', x0: 226, z0: 2, x1: 274, z1: 16, y0: 46, y1: 92, color: '#f6f3ec', extras: [{ p: 'gurli', qty: 1 }] },
+  { id: 'curtain-w', only: 'a', share: 0.5, p: 'hilja', kind: 'curtain', x0: 34, z0: 4, x1: 76, z1: 9, y0: 50, y1: 228 },
+  { id: 'curtain-e', only: 'a', share: 0.5, p: 'hilja', kind: 'curtain', x0: 259, z0: 4, x1: 301, z1: 9, y0: 50, y1: 228 },
   { id: 'rod', only: 'a', p: 'racka', kind: 'rod', x0: 28, z0: 5, x1: 307, z1: 8, y0: 228, y1: 230 },
   { id: 'floorlamp', only: 'a', p: 'hektar-floor', kind: 'floorlamp', x0: 297, z0: 8, x1: 327, z1: 38, y0: 0, y1: 160 },
 
@@ -181,8 +181,8 @@ export const PIECES = [
   { id: 'alex-n', only: 'a', p: 'alex-small', kind: 'alex', x0: R - 58, z0: 52, x1: R, z1: 88, y0: 0, y1: 70, drawers: 5, face: 'w' },
   { id: 'alex-s', only: 'a', p: 'alex-small', kind: 'alex', x0: R - 58, z0: 202, x1: R, z1: 238, y0: 0, y1: 70, drawers: 5, face: 'w' },
   { id: 'karlby', only: 'a', p: 'karlby', kind: 'top', x0: R - 63.5, z0: 52, x1: R, z1: 238, y0: 70, y1: 73.8 },
-  { id: 'skadis-1', only: 'a', p: 'skadis-76', kind: 'skadis', hoops: 1, x0: R - 2, z0: 66, x1: R, z1: 142, y0: 100, y1: 156, face: 'w' },
-  { id: 'skadis-2', only: 'a', p: 'skadis-76', kind: 'skadis', hoops: 2, x0: R - 2, z0: 148, x1: R, z1: 224, y0: 100, y1: 156, face: 'w' },
+  { id: 'skadis-1', only: 'a', p: 'skadis-76', kind: 'skadis', hoops: 1, x0: R - 2, z0: 66, x1: R, z1: 142, y0: 100, y1: 156, face: 'w', extras: [{ p: 'skadis-hook', qty: 2 }, { p: 'skadis-container', qty: 1 }, { p: 'skadis-shelf', qty: 1 }] },
+  { id: 'skadis-2', only: 'a', p: 'skadis-76', kind: 'skadis', hoops: 2, x0: R - 2, z0: 148, x1: R, z1: 224, y0: 100, y1: 156, face: 'w', extras: [{ p: 'skadis-hook', qty: 2 }, { p: 'skadis-container', qty: 1 }, { p: 'skadis-shelf', qty: 1 }] },
   { id: 'lack', only: 'a', p: 'lack-shelf', kind: 'shelf', x0: R - 26, z0: 90, x1: R, z1: 200, y0: 172, y1: 177, spools: 'w' },
   { id: 'tertial-1', only: 'a', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 92, x1: R - 4, z1: 102, y0: 73.8, y1: 125, aim: [-40, 0] },
   { id: 'tertial-2', only: 'a', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 186, x1: R - 4, z1: 196, y0: 73.8, y1: 125, aim: [-40, 0] },
@@ -191,9 +191,9 @@ export const PIECES = [
   { id: 'chair-office', only: 'a', p: 'langfjall', kind: 'officechair', x0: 205, z0: 120, x1: 260, z1: 175, y0: 0, y1: 110, face: 'e' },
 
   // West – supply wall
-  { id: 'kallax', only: 'a', p: 'kallax', kind: 'kallax', x0: 0, z0: 4, x1: 39, z1: 151, y0: 0, y1: 147, face: 'e' },
-  { id: 'alex9-1', only: 'a', p: 'alex-9', kind: 'alex', x0: 0, z0: 156, x1: 48, z1: 192, y0: 0, y1: 116, drawers: 9, face: 'e' },
-  { id: 'alex9-2', only: 'a', p: 'alex-9', kind: 'alex', x0: 0, z0: 196, x1: 48, z1: 232, y0: 0, y1: 116, drawers: 9, face: 'e' },
+  { id: 'kallax', only: 'a', p: 'kallax', kind: 'kallax', x0: 0, z0: 4, x1: 39, z1: 151, y0: 0, y1: 147, face: 'e', extras: [{ p: 'kallax-drawers', qty: 2 }, { p: 'kallax-door', qty: 2 }, { p: 'drona', qty: 6 }, { p: 'tjena', qty: 3 }], openCubes: 3 },
+  { id: 'alex9-1', only: 'a', p: 'alex-9', kind: 'alex', x0: 0, z0: 156, x1: 48, z1: 192, y0: 0, y1: 116, drawers: 9, face: 'e', extras: [{ p: 'kuggis-small', qty: 6 }] },
+  { id: 'alex9-2', only: 'a', p: 'alex-9', kind: 'alex', x0: 0, z0: 196, x1: 48, z1: 232, y0: 0, y1: 116, drawers: 9, face: 'e', extras: [{ p: 'kuggis-small', qty: 6 }] },
   { id: 'mosslanda', only: 'a', p: 'mosslanda', kind: 'ledge', x0: 0, z0: 20, x1: 9, z1: 135, y0: 175, y1: 179, frames: 'e' },
 
   // Centre
@@ -215,10 +215,10 @@ export const PIECES = [
   { id: 'b-tower-w', only: 'b', p: 'kallax-2x4', kind: 'kallaxGrid', cols: 2, rows: 4, face: 's', x0: 0, z0: 2, x1: 76.5, z1: 41, y0: 0, y1: 146.5,
     cells: [['shelf4', 'drona'], ['shelf4', 'drona'], ['shelf4', 'files'], ['shelf4', 'books']] },
   { id: 'b-bench', only: 'b', p: 'kallax-1x4', kind: 'kallaxGrid', cols: 4, rows: 1, face: 's', x0: R / 2 - 73.25, z0: 0, x1: R / 2 + 73.25, z1: 39, y0: 0, y1: 41.3,
-    cells: [['kuggis', 'kuggis', 'kuggis', 'kuggis']] },
+    cells: [['kuggis', 'kuggis', 'kuggis', 'kuggis']], extras: [{ p: 'kuddarna-b', qty: 1, onTop: true }, { p: 'fjadermott-b', qty: 2, onTop: true }, { p: 'gurli-b', qty: 2, onTop: true }] },
   { id: 'b-pad', only: 'b', p: 'kuddarna-b', kind: 'cushion', x0: R / 2 - 60, z0: 1, x1: R / 2 + 60, z1: 39, y0: 41.3, y1: 47.3 },
-  { id: 'b-pil-1', only: 'b', p: 'fjadermott-b', kind: 'pillow', x0: R / 2 - 70, z0: 2, x1: R / 2 - 22, z1: 16, y0: 47.3, y1: 93, color: '#f6f3ec' },
-  { id: 'b-pil-2', only: 'b', p: 'fjadermott-b', kind: 'pillow', x0: R / 2 + 22, z0: 2, x1: R / 2 + 70, z1: 16, y0: 47.3, y1: 93, color: '#f6f3ec' },
+  { id: 'b-pil-1', only: 'b', p: 'fjadermott-b', kind: 'pillow', x0: R / 2 - 70, z0: 2, x1: R / 2 - 22, z1: 16, y0: 47.3, y1: 93, color: '#f6f3ec', extras: [{ p: 'gurli-b', qty: 1 }] },
+  { id: 'b-pil-2', only: 'b', p: 'fjadermott-b', kind: 'pillow', x0: R / 2 + 22, z0: 2, x1: R / 2 + 70, z1: 16, y0: 47.3, y1: 93, color: '#f6f3ec', extras: [{ p: 'gurli-b', qty: 1 }] },
   { id: 'b-tower-e', only: 'b', p: 'kallax-2x4', kind: 'kallaxGrid', cols: 2, rows: 4, face: 's', x0: R - 76.5, z0: 2, x1: R, z1: 41, y0: 0, y1: 146.5,
     cells: [['drona', 'drona'], ['books', 'files'], ['bottles', 'shelf1'], ['bottles', 'shelf1']] },
   { id: 'b-blind-w', only: 'b', p: 'hoppvals', kind: 'blind', x0: ROOM.window.x0 + 1, z0: -5, x1: (ROOM.window.x0 + ROOM.window.x1) / 2 - 3, z1: -4, y0: ROOM.window.sill, y1: ROOM.window.head },
@@ -229,16 +229,16 @@ export const PIECES = [
   { id: 'b-desk-w', only: 'b', p: 'kallax-desk', kind: 'kdesk', face: 'e', x0: 0, z0: 45, x1: 39, z1: 156, y0: 0, y1: 77, inserts: ['door', 'drawers'] },
   { id: 'b-tower-1x4', only: 'b', p: 'kallax-1x4', kind: 'kallaxGrid', cols: 1, rows: 4, face: 'e', x0: 0, z0: 156, x1: 39, z1: 197.3, y0: 0, y1: 146.5,
     cells: [['lock'], ['files'], ['books'], ['books']] },
-  { id: 'b-alex9', only: 'b', p: 'alex-9-b', kind: 'alex', x0: 0, z0: 201, x1: 48, z1: 237, y0: 0, y1: 116, drawers: 9, face: 'e' },
-  { id: 'b-skadis-w', only: 'b', p: 'skadis-76-b', kind: 'skadis', x0: 0, z0: 62, x1: 2, z1: 138, y0: 95, y1: 151, face: 'e' },
+  { id: 'b-alex9', only: 'b', p: 'alex-9-b', kind: 'alex', x0: 0, z0: 201, x1: 48, z1: 237, y0: 0, y1: 116, drawers: 9, face: 'e', extras: [{ p: 'kuggis-small-b', qty: 6 }] },
+  { id: 'b-skadis-w', only: 'b', p: 'skadis-76-b', kind: 'skadis', x0: 0, z0: 62, x1: 2, z1: 138, y0: 95, y1: 151, face: 'e', extras: [{ p: 'skadis-hook', qty: 1 }, { p: 'skadis-shelf', qty: 1 }] },
   { id: 'b-chair-w', only: 'b', p: 'teodores', kind: 'chair', x0: 45, z0: 99, x1: 88, z1: 143, y0: 0, y1: 80, face: 'w' },
 
   // East: KALLAX desk (sewing) + BILLY with the table folded out (embroidery).
   // x0 of the BILLY is the open table's reach into the room.
   { id: 'b-desk-e', only: 'b', p: 'kallax-desk', kind: 'kdesk', face: 'w', x0: R - 39, z0: 44, x1: R, z1: 155, y0: 0, y1: 77, inserts: ['door', 'drawers'] },
   { id: 'b-billy', only: 'b', p: 'billy-fold', kind: 'billyfold', face: 'w', x0: R - 112.4, z0: 163, x1: R, z1: 243, y0: 0, y1: 106, caseDepth: 32.4, tableY: 74.3 },
-  { id: 'b-skadis-e1', only: 'b', p: 'skadis-76-b', kind: 'skadis', hoops: 1, x0: R - 2, z0: 60, x1: R, z1: 136, y0: 110, y1: 166, face: 'w' },
-  { id: 'b-skadis-e2', only: 'b', p: 'skadis-76-b', kind: 'skadis', hoops: 2, x0: R - 2, z0: 165, x1: R, z1: 241, y0: 120, y1: 176, face: 'w' },
+  { id: 'b-skadis-e1', only: 'b', p: 'skadis-76-b', kind: 'skadis', hoops: 1, x0: R - 2, z0: 60, x1: R, z1: 136, y0: 110, y1: 166, face: 'w', extras: [{ p: 'skadis-hook', qty: 2 }, { p: 'skadis-container', qty: 1 }] },
+  { id: 'b-skadis-e2', only: 'b', p: 'skadis-76-b', kind: 'skadis', hoops: 2, x0: R - 2, z0: 165, x1: R, z1: 241, y0: 120, y1: 176, face: 'w', extras: [{ p: 'skadis-hook', qty: 1 }, { p: 'skadis-container', qty: 1 }, { p: 'skadis-shelf', qty: 1 }] },
   { id: 'b-lack', only: 'b', p: 'lack-shelf', kind: 'shelf', x0: R - 26, z0: 90, x1: R, z1: 200, y0: 188, y1: 193 },
   { id: 'b-tertial-1', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 104, x1: R - 4, z1: 114, y0: 77, y1: 128 },
   { id: 'b-tertial-2', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 228, x1: R - 4, z1: 238, y0: 106, y1: 157 },
@@ -283,6 +283,43 @@ export const options = { plan: 'a' };
 export const isActive = item => !item.only || item.only === options.plan;
 export const activePieces = () => PIECES.filter(isActive);
 export const activeProducts = () => PRODUCTS.filter(isActive);
+
+// What goes in or on a piece: KALLAX inserts and boxes from its cubes, desk
+// inserts, plus any `extras` (drawers, covers, hooks…). Extras marked
+// `onTop` are separate pieces resting on it (a bench pad), listed for
+// reference only. Returns { items: [{ key, qty, onTop }], openCubes } –
+// open cubes hold your own things.
+const CELL_PRODUCTS = {
+  shelf4: 'kallax-shelf4', shelf1: 'kallax-shelf1', bottles: 'kallax-bottles', kuggis: 'kuggis-cube',
+  drona: 'drona-b', files: 'tjena-b', drawers: 'kallax-desk-drawers', door: 'kallax-desk-door', lock: 'kallax-lock',
+};
+export function accessoriesOf(piece) {
+  const counts = new Map();
+  const add = (key, qty) => counts.set(key, (counts.get(key) || 0) + qty);
+  let openCubes = piece.openCubes || 0;
+  for (const type of [...(piece.cells || []).flat(), ...(piece.inserts || [])]) {
+    if (CELL_PRODUCTS[type]) add(CELL_PRODUCTS[type], 1);
+    else openCubes++;
+  }
+  const onTop = new Set();
+  for (const e of piece.extras || []) {
+    add(e.p, e.qty);
+    if (e.onTop) onTop.add(e.p);
+  }
+  return { items: [...counts].map(([key, qty]) => ({ key, qty, onTop: onTop.has(key) })), openCubes };
+}
+
+// The same, added up over every piece of one product in the current option.
+export function accessoriesOfProduct(key) {
+  const counts = new Map();
+  let openCubes = 0;
+  for (const piece of activePieces().filter(p => p.p === key)) {
+    const acc = accessoriesOf(piece);
+    acc.items.filter(i => !i.onTop).forEach(i => counts.set(i.key, (counts.get(i.key) || 0) + i.qty));
+    openCubes += acc.openCubes;
+  }
+  return { items: [...counts].map(([k, qty]) => ({ key: k, qty })), openCubes };
+}
 
 // Direct product page when we have one, otherwise an IKEA search.
 export function ikeaUrl(p) {

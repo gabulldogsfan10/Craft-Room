@@ -1,4 +1,4 @@
-import { ROOM, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, productByKey, ikeaUrl, options, activeProducts, activePieces } from './data.js';
+import { ROOM, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, productByKey, ikeaUrl, options, activeProducts, activePieces, accessoriesOf, accessoriesOfProduct } from './data.js';
 import { createRoom } from './scene.js';
 import { productImage, pieceImage } from './previews.js';
 import { floorPlan, elevation, wallSummary, WALL_NAMES, feetInches } from './drawings.js';
@@ -37,6 +37,45 @@ function imageFor(prod, piece) {
   return group ? pieceImage(p, group, faceOf(p)) : productImage(prod.key);
 }
 
+// Inserts, boxes and other add-ons that go in or on a piece (or, for a
+// product card, in every piece of that product), each linking to its own card.
+function accessoriesHtml(prod, piece) {
+  const acc = piece ? accessoriesOf(piece) : accessoriesOfProduct(prod.key);
+  if (!acc.items.length && !acc.openCubes) return '';
+  const row = ({ key, qty }) => {
+    const a = productByKey[key];
+    const img = imageFor(a);
+    return `<li>
+      <button class="acc-row" data-acc="${key}" aria-label="Show details for ${esc(a.name)}">
+        ${img ? `<img src="${img}" alt="">` : '<span class="acc-noimg"></span>'}
+        <span class="acc-name"><b>${esc(a.name)}</b><small>${esc(a.spec)}</small></span>
+        <span class="acc-qty">×${qty}</span>
+      </button>
+      <a class="small-link" href="${ikeaUrl(a)}" target="_blank" rel="noopener">IKEA ↗</a>
+    </li>`;
+  };
+  const inside = acc.items.filter(i => !i.onTop);
+  const onTop = acc.items.filter(i => i.onTop);
+  const many = !piece && activePieces().filter(p => p.p === prod.key).length > 1;
+  return `<div class="acc">
+    ${inside.length ? `<h4>${many ? 'In these pieces' : 'In this piece'}</h4><ul>${inside.map(row).join('')}</ul>` : ''}
+    ${onTop.length ? `<h4>On it</h4><ul>${onTop.map(row).join('')}</ul>` : ''}
+    ${acc.openCubes ? `<p class="muted">${acc.openCubes} open ${acc.openCubes === 1 ? 'cube' : 'cubes'} left for your own books and supplies.</p>` : ''}
+  </div>`;
+}
+
+// For an insert or box: which pieces it goes in, e.g. "KALLAX shelf unit ×2".
+function goesIn(key) {
+  const hosts = new Map();
+  for (const p of activePieces()) {
+    if (p.p && accessoriesOf(p).items.some(i => i.key === key && !i.onTop)) {
+      const name = productByKey[p.p].name;
+      hosts.set(name, (hosts.get(name) || 0) + 1);
+    }
+  }
+  return [...hosts].map(([n, c]) => (c > 1 ? `${n} ×${c}` : n)).join(', ');
+}
+
 function productCard(prod, sizeNote, piece) {
   const zone = ZONES[prod.zone];
   const img = imageFor(prod, piece);
@@ -50,6 +89,8 @@ function productCard(prod, sizeNote, piece) {
     <p class="spec">${esc(prod.spec)} · qty ${prod.qty} · est. ${money(prod.price * prod.qty)}</p>
     <p>${esc(prod.why)}</p>
     ${sizeNote ? `<p class="muted">${sizeNote}</p>` : ''}
+    ${!piece && goesIn(prod.key) ? `<p class="muted">Goes in: ${esc(goesIn(prod.key))}</p>` : ''}
+    ${accessoriesHtml(prod, piece)}
     <a class="item-link" href="${ikeaUrl(prod)}" target="_blank" rel="noopener">${prod.url ? 'View this item on IKEA' : 'Search for this item on IKEA'} ↗</a>`;
 }
 
@@ -278,8 +319,14 @@ function fillThumbs() {
 const dialog = $('#item-dialog');
 function openItem(key) {
   $('#item-dialog-body').innerHTML = productCard(productByKey[key]);
-  dialog.showModal();
+  if (!dialog.open) dialog.showModal();
+  dialog.scrollTop = 0;
 }
+// Accessory rows on any card open that accessory's own card.
+document.addEventListener('click', e => {
+  const row = e.target.closest('[data-acc]');
+  if (row) openItem(row.dataset.acc);
+});
 $('#item-dialog-close').onclick = () => dialog.close();
 dialog.addEventListener('click', e => {
   if (e.target === dialog) dialog.close();

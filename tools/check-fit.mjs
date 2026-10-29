@@ -1,8 +1,9 @@
 // Checks that every piece in each plan fits the room:
 //   node tools/check-fit.mjs
 // Reports pieces outside the room, pieces that collide, anything in a door's
-// swing, and tall pieces that cover window glass. Exits 1 on any problem.
-import { ROOM, PIECES, PLANS, options, activePieces } from '../js/data.js';
+// swing, tall pieces that cover window glass, and shopping-list quantities
+// that don't match what the pieces use. Exits 1 on any problem.
+import { ROOM, PLANS, options, activePieces, activeProducts, accessoriesOf } from '../js/data.js';
 import { feetInches } from '../js/drawings.js';
 
 const R = ROOM.size;
@@ -60,6 +61,17 @@ for (const plan of Object.keys(PLANS)) {
       if (pair === 'alex+top') continue; // counter sits on its drawer units
       if (boxesOverlap(a, b)) out.push(`collide: ${name(a)} and ${name(b)}`);
     }
+  }
+  // every placed piece and accessory adds up to the shopping-list quantity
+  const used = new Map();
+  const use = (key, n) => used.set(key, (used.get(key) || 0) + n);
+  for (const p of pieces) {
+    if (p.p) use(p.p, p.share ?? 1);
+    for (const i of accessoriesOf(p).items) if (!i.onTop) use(i.key, i.qty);
+  }
+  for (const prod of activeProducts()) {
+    const n = used.get(prod.key) || 0;
+    if (n && n !== prod.qty) out.push(`${prod.name} (${prod.key}): the list says ${prod.qty}, the pieces use ${n}`);
   }
   console.log(`${PLANS[plan].name}: ${pieces.length} pieces – ${out.length ? `${out.length} problem(s)` : 'everything fits'}`);
   for (const line of out) console.log(`  ✗ ${line}`);
