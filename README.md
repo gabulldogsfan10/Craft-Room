@@ -36,6 +36,24 @@ It also works as-is on GitHub Pages.
 - **Centre:** a NORDEN gateleg table for cutting and beading that folds away, 2 TEODORES chairs, a RÅSKOG cart and a LOHALS rug.
 - **South wall:** BOAXEL closet system with KUGGIS boxes, and a SKÅDIS board between the doors.
 
+## Two layouts
+
+Switch between them at the top of the page:
+
+- **Option 1 · Starter plan** – the layout described above.
+- **Option 2 · Your KALLAX design** – the IKEA KALLAX planner design `3476KNP`
+  fitted to this room. It has the KALLAX towers and window bench, KALLAX desks
+  and an upright 1×4 with a lockable door. The BILLY bookcase with foldable
+  table holds the embroidery machine. Two desks fit; the design's third desk
+  needs 87⅜″ of free wall alongside another desk, which no wall here has
+  once the door swings are kept clear.
+
+Check that every piece in both layouts fits the walls, window and door swings:
+
+```sh
+node tools/check-fit.mjs
+```
+
 ## Editing the design
 
 All measurements, furniture positions and products live in `js/data.js`, with

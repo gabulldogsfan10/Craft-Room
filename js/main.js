@@ -1,10 +1,13 @@
-import { PRODUCTS, ZONES, PHOTO_VIEWS, WALL_COLORS, productByKey, ikeaUrl } from './data.js';
+import { ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, productByKey, ikeaUrl, options, activeProducts } from './data.js';
 import { createRoom } from './scene.js';
 import { productImage } from './previews.js';
 import { floorPlan, elevation, wallSummary, WALL_NAMES, feetInches } from './drawings.js';
 
 const $ = s => document.querySelector(s);
-const money = n => `$${n.toLocaleString('en-US')}`;
+const money = n => {
+  const cents = Math.round(n * 100) / 100;
+  return `$${cents.toLocaleString('en-US', Number.isInteger(cents) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const store = {
@@ -145,16 +148,20 @@ function refreshSnapshots() {
 
 // ------------------------------------------------------------ plan + elevations
 
-$('#plan').append(floorPlan(p => ($('#plan-info').innerHTML = pieceHtml(p))));
-for (const w of WALL_NAMES) {
-  const wrap = document.createElement('div');
-  wrap.className = 'card elev-card';
-  const info = document.createElement('div');
-  info.className = 'elev-info muted';
-  info.textContent = 'Click a piece for details';
-  const show = p => (info.innerHTML = pieceHtml(p));
-  wrap.append(elevation(w, show), wallTable(w, show), info);
-  $('#elevations').append(wrap);
+function renderDrawings() {
+  $('#plan').replaceChildren(floorPlan(p => ($('#plan-info').innerHTML = pieceHtml(p))));
+  $('#plan-info').innerHTML = '<h3>Click a piece on the plan</h3>';
+  $('#elevations').replaceChildren();
+  for (const w of WALL_NAMES) {
+    const wrap = document.createElement('div');
+    wrap.className = 'card elev-card';
+    const info = document.createElement('div');
+    info.className = 'elev-info muted';
+    info.textContent = 'Click a piece for details';
+    const show = p => (info.innerHTML = pieceHtml(p));
+    wrap.append(elevation(w, show), wallTable(w, show), info);
+    $('#elevations').append(wrap);
+  }
 }
 
 // How much of the wall each piece takes up, measured from the left as you face it.
@@ -192,7 +199,8 @@ function renderList() {
   let grand = 0;
   let remaining = 0;
   const html = Object.entries(ZONES).map(([key, z]) => {
-    const items = PRODUCTS.filter(p => p.zone === key);
+    const items = activeProducts().filter(p => p.zone === key);
+    if (!items.length) return '';
     const sub = items.reduce((s, p) => s + p.qty * p.price, 0);
     grand += sub;
     remaining += items.filter(p => !owned.has(p.key)).reduce((s, p) => s + p.qty * p.price, 0);
@@ -220,14 +228,13 @@ function renderList() {
     <div class="totals card">
       <div><span class="muted">Estimated total</span><b>${money(grand)}</b></div>
       <div><span class="muted">Still to buy</span><b>${money(remaining)}</b></div>
-      <div><span class="muted">Products</span><b>${PRODUCTS.length}</b></div>
+      <div><span class="muted">Products</span><b>${activeProducts().length}</b></div>
     </div>` + html;
   $('#shopping').querySelectorAll('input[type=checkbox]').forEach(cb => {
     cb.onchange = () => {
       cb.checked ? owned.add(cb.dataset.key) : owned.delete(cb.dataset.key);
       store.set('owned', [...owned]);
-      renderList();
-    };
+          };
   });
   $('#shopping').querySelectorAll('.thumb-btn, .name-btn').forEach(b => (b.onclick = () => openItem(b.dataset.key)));
   fillThumbs();
@@ -258,8 +265,6 @@ dialog.addEventListener('click', e => {
   if (e.target === dialog) dialog.close();
 });
 
-renderList();
-
 // When hosted as a claude.ai artifact, downloads and printing are blocked,
 // so offer copy-to-clipboard instead.
 const embedded = Boolean(window.CRAFT_EMBEDDED);
@@ -270,7 +275,7 @@ if (embedded) {
 
 $('#export-csv').onclick = () => {
   const rows = [['Zone', 'Product', 'Size / finish', 'Qty', 'Est. each (USD)', 'Est. total (USD)', 'Got it', 'Use', 'IKEA link']];
-  for (const p of PRODUCTS) {
+  for (const p of activeProducts()) {
     rows.push([ZONES[p.zone].name, p.name, p.spec, p.qty, p.price, p.qty * p.price, owned.has(p.key) ? 'yes' : '', p.why, ikeaUrl(p)]);
   }
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -300,3 +305,20 @@ function showTab(name) {
 }
 document.querySelectorAll('.tabs button').forEach(b => (b.onclick = () => showTab(b.dataset.tab)));
 showTab(location.hash.slice(1) && document.getElementById(`tab-${location.hash.slice(1)}`) ? location.hash.slice(1) : 'render');
+
+// ------------------------------------------------------------ plan options
+
+// Option 1 (starter plan) or Option 2 (your KALLAX design); see PLANS in data.js.
+function setPlan(plan) {
+  options.plan = plan;
+  store.set('plan', plan);
+  document.querySelectorAll('[data-plan]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === plan)));
+  room.refreshActive();
+  $('#piece-info').innerHTML = pieceHtml(null);
+  renderDrawings();
+  renderList();
+  snapshotsStale = true;
+  if (document.body.dataset.tab === 'photos') refreshSnapshots();
+}
+document.querySelectorAll('[data-plan]').forEach(b => (b.onclick = () => setPlan(b.dataset.plan)));
+setPlan(PLANS[store.get('plan', 'a')] ? store.get('plan', 'a') : 'a');

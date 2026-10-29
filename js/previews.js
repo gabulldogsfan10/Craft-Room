@@ -146,7 +146,32 @@ const MODELS = {
   boaxel: { build: g => CUSTOM.boaxel(g), from: [0.4, 0.3, 1] },
   'kuggis-large': { build: g => CUSTOM.kuggis(g, 26, 35, 15), from: [0.7, 0.7, 1] },
   'skadis-36': { piece: P('skadis', 36, 2, 56, { face: 's' }), from: [0.3, 0.2, 1] },
+
+  // Option 2 – KALLAX design pieces
+  'kallax-2x4': { piece: P('kallaxGrid', 76.5, 39, 146.5, { cols: 2, rows: 4, face: 's', cells: [['open', 'open'], ['open', 'open'], ['open', 'open'], ['open', 'open']] }), from: [0.6, 0.4, 1] },
+  'kallax-1x4': { piece: P('kallaxGrid', 146.5, 39, 41.3, { cols: 4, rows: 1, face: 's', cells: [['open', 'open', 'open', 'open']] }), from: [0.5, 0.6, 1] },
+  'kallax-bottles': { piece: P('kallaxGrid', 41.3, 39, 41.3, { cols: 1, rows: 1, face: 's', cells: [['bottles']] }), from: [0.5, 0.4, 1] },
+  'kallax-shelf1': { piece: P('kallaxGrid', 41.3, 39, 41.3, { cols: 1, rows: 1, face: 's', cells: [['shelf1']] }), from: [0.5, 0.4, 1] },
+  'kallax-shelf4': { piece: P('kallaxGrid', 41.3, 39, 41.3, { cols: 1, rows: 1, face: 's', cells: [['shelf4']] }), from: [0.5, 0.4, 1] },
+  'kuggis-cube': { build: g => CUSTOM.kuggis(g, 32, 32, 30), from: [0.7, 0.7, 1] },
+  'kallax-desk': { piece: P('kdesk', 111, 39, 77, { face: 's', inserts: ['door', 'drawers'] }), from: [0.6, 0.5, 1] },
+  'kallax-desk-drawers': { piece: P('kallaxGrid', 41.3, 39, 41.3, { cols: 1, rows: 1, face: 's', cells: [['drawers']] }), from: [0.5, 0.4, 1] },
+  'kallax-desk-door': { piece: P('kallaxGrid', 41.3, 39, 41.3, { cols: 1, rows: 1, face: 's', cells: [['door']] }), from: [0.5, 0.4, 1] },
+  'kallax-lock': { piece: P('kallaxGrid', 41.3, 39, 41.3, { cols: 1, rows: 1, face: 's', cells: [['lock']] }), from: [0.5, 0.4, 1] },
+  'billy-fold': { piece: P('billyfold', 80, 112.4, 106, { face: 's', caseDepth: 32.4, tableY: 74.3 }), from: [0.9, 0.6, 1] },
+  hoppvals: { piece: P('blind', 86, 1, 145), from: [0.3, 0.2, 1] },
 };
+// Option 2 add-ons that are the same product as one in Option 1.
+Object.assign(MODELS, {
+  'kuddarna-b': MODELS['bench-cushion'],
+  'fjadermott-b': MODELS.fjadermott,
+  'gurli-b': MODELS.gurli,
+  'drona-b': MODELS.drona,
+  'tjena-b': MODELS.tjena,
+  'skadis-76-b': MODELS['skadis-76'],
+  'alex-9-b': MODELS['alex-9'],
+  'kuggis-small-b': MODELS['kuggis-small'],
+});
 
 let studio = null;
 function setupStudio() {

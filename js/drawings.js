@@ -1,5 +1,5 @@
 // 2D drawings: floor plan and wall elevations (SVG), built from data.js.
-import { ROOM, PIECES, ZONES, productByKey, FT } from './data.js';
+import { ROOM, activePieces, options, ZONES, productByKey, FT } from './data.js';
 
 const R = ROOM.size;
 const NS = 'http://www.w3.org/2000/svg';
@@ -26,7 +26,7 @@ export function feetInches(cm) {
 // ---------------------------------------------------------------- wall runs
 
 // Furniture that stands on the floor against a wall, and pieces hung on it.
-const FLOOR_KINDS = new Set(['besta', 'kallax', 'alex', 'top', 'floorlamp']);
+const FLOOR_KINDS = new Set(['besta', 'kallax', 'kallaxGrid', 'kdesk', 'billyfold', 'alex', 'top', 'floorlamp']);
 const MOUNTED_KINDS = new Set(['skadis', 'shelf', 'ledge']);
 
 // Merge overlapping spans (e.g. the KARLBY counter over its ALEX units).
@@ -64,7 +64,7 @@ export function wallSummary(name) {
     const [l, r] = W.h(...W.span(p));
     return { l, r, label: shortLabel(p) || pieceLabel(p) };
   };
-  const nearWall = PIECES.filter(p => W.depth(p) < 20);
+  const nearWall = activePieces().filter(p => W.depth(p) < 20);
   const floor = nearWall.filter(p => FLOOR_KINDS.has(p.kind));
   const mounted = nearWall.filter(p => MOUNTED_KINDS.has(p.kind));
   const floorSpans = mergeSpans(floor.map(along));
@@ -137,7 +137,7 @@ function zoneColor(p) {
 }
 
 // Which pieces to draw in plan (skip small decorative bits)
-const PLAN_SKIP = new Set(['pillow', 'curtain', 'rod', 'tertial', 'machine', 'ledge', 'skadis', 'shelf', 'cushion']);
+const PLAN_SKIP = new Set(['pillow', 'curtain', 'rod', 'tertial', 'machine', 'ledge', 'skadis', 'shelf', 'cushion', 'blind']);
 
 export function floorPlan(onSelect) {
   const pad = 92;
@@ -150,7 +150,7 @@ export function floorPlan(onSelect) {
   }
 
   // Pieces (rug first so it sits under everything)
-  const sorted = [...PIECES].filter(p => !PLAN_SKIP.has(p.kind)).sort((a, b) => (a.kind === 'rug' ? -1 : b.kind === 'rug' ? 1 : 0));
+  const sorted = activePieces().filter(p => !PLAN_SKIP.has(p.kind)).sort((a, b) => (a.kind === 'rug' ? -1 : b.kind === 'rug' ? 1 : 0));
   for (const p of sorted) {
     const g = el('g', { class: 'piece', 'data-id': p.id });
     const c = zoneColor(p);
@@ -166,9 +166,11 @@ export function floorPlan(onSelect) {
     g.addEventListener('click', () => onSelect(p));
     svg.append(g);
   }
-  // window-seat label once, across both cushions
-  svg.append(el('text', { x: 167.5, y: 20, class: 'plan-label' }, 'Window seat · 2× BESTÅ'));
-  svg.append(el('text', { x: 312, y: 23, class: 'plan-label' }, 'lamp'));
+  if (options.plan === 'a') {
+    // window-seat label once, across both cushions
+    svg.append(el('text', { x: 167.5, y: 20, class: 'plan-label' }, 'Window seat · 2× BESTÅ'));
+    svg.append(el('text', { x: 312, y: 23, class: 'plan-label' }, 'lamp'));
+  }
 
   // Walls
   const wt = 10;
@@ -278,7 +280,7 @@ export function elevation(name, onSelect) {
     svg.append(el('rect', { x: sl, y: Y(127), width: 8, height: 12, class: 'elev-switch' }));
   }
 
-  const items = PIECES.filter(p => W.depth(p) < 20 && !ELEV_SKIP.has(p.kind))
+  const items = activePieces().filter(p => W.depth(p) < 20 && !ELEV_SKIP.has(p.kind))
     .sort((a, b) => W.depth(b) - W.depth(a)); // far first, near last
   for (const p of items) {
     const [a, b] = W.span(p);
@@ -287,7 +289,7 @@ export function elevation(name, onSelect) {
     const g = el('g', { class: 'piece', 'data-id': p.id });
     g.append(el('rect', {
       x: l, y: Y(p.y1), width: r - l, height: Math.max(p.y1 - p.y0, 1.5),
-      fill: c, 'fill-opacity': p.kind === 'curtain' ? 0.15 : p.prop ? 0.1 : 0.35, stroke: c, 'stroke-width': 1.2,
+      fill: c, 'fill-opacity': ['curtain', 'blind'].includes(p.kind) ? 0.15 : p.prop ? 0.1 : 0.35, stroke: c, 'stroke-width': 1.2,
       'stroke-dasharray': p.prop ? '4 3' : '',
     }));
     if (p.drawers) {
@@ -300,6 +302,17 @@ export function elevation(name, onSelect) {
         g.append(el('line', { x1: l, x2: r, y1: Y(p.y0 + ((p.y1 - p.y0) * i) / 4), y2: Y(p.y0 + ((p.y1 - p.y0) * i) / 4), stroke: c }));
       }
     }
+    if (p.kind === 'kallaxGrid') {
+      // cube grid as seen from the front (or the side, on a neighbouring wall)
+      const facing = { north: 's', south: 'n', east: 'w', west: 'e' }[name] === p.face;
+      const cols = facing ? p.cols : 1;
+      for (let i = 1; i < cols; i++) g.append(el('line', { x1: l + ((r - l) * i) / cols, x2: l + ((r - l) * i) / cols, y1: Y(p.y1), y2: Y(p.y0), stroke: c }));
+      for (let i = 1; i < p.rows; i++) {
+        const y = Y(p.y0 + ((p.y1 - p.y0) * i) / p.rows);
+        g.append(el('line', { x1: l, x2: r, y1: y, y2: y, stroke: c }));
+      }
+    }
+    if (p.kind === 'billyfold') g.append(el('line', { x1: l, x2: r, y1: Y(p.tableY), y2: Y(p.tableY), stroke: c, 'stroke-width': 2 }));
     if (p.kind === 'besta') g.append(el('line', { x1: (l + r) / 2, x2: (l + r) / 2, y1: Y(p.y1), y2: Y(p.y0), stroke: c }));
     if (['shelf', 'ledge', 'top'].includes(p.kind)) {
       g.append(el('text', { x: (l + r) / 2, y: Y(p.y1) - 6, class: 'plan-label' }, shortLabel(p)));

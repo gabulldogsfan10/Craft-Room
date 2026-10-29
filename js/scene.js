@@ -1,7 +1,7 @@
 // Three.js model of the room and the proposed IKEA furniture.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ROOM, PIECES } from './data.js';
+import { ROOM, PIECES, isActive } from './data.js';
 
 const R = ROOM.size;
 const H = ROOM.height;
@@ -357,10 +357,10 @@ export const BUILDERS = {
     g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, tex));
     const f = frontFrame(p, p.face);
     const hoopMat = mat('#e9dfcf', { roughness: 0.5 });
-    const isMachine = p.id.startsWith('skadis-') && p.face === 'w';
+    const isMachine = Boolean(p.hoops);
     if (isMachine) {
       // embroidery hoops hanging on hooks
-      const sizes = p.id === 'skadis-1' ? [[18, 12], [13, 9]] : [[22, 15], [10, 10]];
+      const sizes = p.hoops === 1 ? [[18, 12], [13, 9]] : [[22, 15], [10, 10]];
       sizes.forEach(([w, h], i) => {
         const a = 14 + i * 36 + w / 2;
         const [x, z] = f.at(a, 3);
@@ -552,6 +552,17 @@ export const BUILDERS = {
   norden(p, g) {
     const W = white();
     const top = 74;
+    if (p.folded) {
+      // both leaves down: just the 10¼″ drawer section with the leaves hanging
+      g.add(box(p.x0 + 1, 0, p.z0 + 2, p.x1 - 1, top - 3, p.z1 - 2, W));
+      g.add(box(p.x0, top - 3, p.z0, p.x1, top, p.z1, W));
+      g.add(box(p.x0 - 2, 12, p.z0, p.x0, top - 3, p.z1, W), box(p.x1, 12, p.z0, p.x1 + 2, top - 3, p.z1, W));
+      for (let i = 0; i < 3; i++) {
+        const y0 = 8 + i * 20;
+        g.add(box(p.x0 + 2, y0, p.z1 - 2, p.x1 - 2, y0 + 18, p.z1 - 1, W), box(p.x0 + 2, y0, p.z0 + 1, p.x1 - 2, y0 + 18, p.z0 + 2, W));
+      }
+      return;
+    }
     // drawer section (10¼″) at the east end, one 24¾″ leaf raised to the west
     const mx0 = p.x1 - 26;
     g.add(box(mx0, 0, p.z0 + 2, p.x1, top - 3, p.z1 - 2, W));
@@ -582,8 +593,198 @@ export const BUILDERS = {
     const s = 21;
     for (const dx of [-1, 1]) for (const dz of [-1, 1]) g.add(box(cx + dx * s - 1.5, 0, cz + dz * s - 1.5, cx + dx * s + 1.5, 45, cz + dz * s + 1.5, W));
     g.add(box(cx - s - 1.5, 45, cz - s - 1.5, cx + s + 1.5, 48, cz + s + 1.5, W));
-    const back = { n: [cx - s, cz + s - 2, cx + s, cz + s + 1.5], e: [cx - s - 1.5, cz - s, cx - s + 2, cz + s] }[p.face];
+    const back = {
+      n: [cx - s, cz + s - 2, cx + s, cz + s + 1.5],
+      s: [cx - s, cz - s - 1.5, cx + s, cz - s + 2],
+      e: [cx - s - 1.5, cz - s, cx - s + 2, cz + s],
+      w: [cx + s - 2, cz - s, cx + s + 1.5, cz + s],
+    }[p.face];
     g.add(box(back[0], 48, back[1], back[2], p.y1, back[3], W));
+  },
+
+  // Any KALLAX shelf unit: `cols`×`rows` cubes opening toward `face`, with
+  // `cells[row][col]` (bottom row first) naming each cube's insert or contents.
+  kallaxGrid(p, g) {
+    const f = frontFrame(p, p.face);
+    const D = f.horiz ? p.z1 - p.z0 : p.x1 - p.x0;
+    const t = 3.6;
+    const cw = (f.len - (p.cols + 1) * t) / p.cols;
+    const ch = (p.y1 - p.y0 - (p.rows + 1) * t) / p.rows;
+    // a box given by a span across the front (a), height (y) and depth (d ≤ 0 is inside)
+    const part = (a0, a1, y0, y1, d0, d1, m) => {
+      const [xa, za] = f.at(a0, d0);
+      const [xb, zb] = f.at(a1, d1);
+      return box(Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), m);
+    };
+    const W = white();
+    g.add(part(0, f.len, p.y0, p.y1, -D, -D + 0.6, W));
+    g.add(part(0, f.len, p.y0, p.y0 + t, -D, 0, W), part(0, f.len, p.y1 - t, p.y1, -D, 0, W));
+    for (let i = 0; i <= p.cols; i++) g.add(part(i * (cw + t), i * (cw + t) + t, p.y0, p.y1, -D, 0, W));
+    for (let i = 1; i < p.rows; i++) {
+      const y = p.y0 + i * (ch + t);
+      g.add(part(0, f.len, y, y + t, -D, 0, W));
+    }
+    const blue = mat('#a9bccb', { roughness: 0.6 });
+    const knob = (a, y, d) => {
+      const [x, z] = f.at(a, d);
+      const k = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), mat('#1d1d1f'));
+      k.position.set(x, y, z);
+      g.add(k);
+    };
+    p.cells.forEach((row, r) => row.forEach((type, c) => {
+      const a0 = t + c * (cw + t);
+      const a1 = a0 + cw;
+      const y0 = p.y0 + t + r * (ch + t);
+      const y1 = y0 + ch;
+      const mid = (a0 + a1) / 2;
+      if (type === 'drona') {
+        g.add(part(a0 + 0.5, a1 - 0.5, y0, y1 - 0.6, -36, -1, mat('#f2f0eb', { roughness: 0.95 })));
+        g.add(part(mid - 4, mid + 4, y1 - 9, y1 - 6, -0.95, -0.9, mat('#b9b2a6')));
+      } else if (type === 'kuggis') {
+        g.add(part(a0 + 1, a1 - 1, y0, y1 - 2.5, -D + 3, -1, mat('#f4f4f2', { transparent: true, opacity: 0.88, roughness: 0.3 })));
+        g.add(part(a0 + 0.7, a1 - 0.7, y1 - 2.5, y1 - 1.3, -D + 2.7, -0.7, mat('#ffffff')));
+      } else if (type === 'files') {
+        for (let i = 0; i < 4; i++) g.add(part(a0 + 1 + i * 8, a0 + 8.5 + i * 8, y0, y0 + 31, -26, -3, mat(i % 2 ? '#ffffff' : '#f1efea')));
+      } else if (type === 'books') {
+        let a = a0 + 1;
+        while (a < a1 - 4) {
+          const bw = 2 + rand() * 3;
+          const col = new THREE.Color().setHSL(rand(), 0.3, 0.35 + rand() * 0.3);
+          g.add(part(a, a + bw, y0, y0 + 20 + rand() * 9, -24, -4, mat('#' + col.getHexString())));
+          a += bw + 0.4;
+        }
+      } else if (type === 'shelf1' || type === 'shelf4') {
+        const n = type === 'shelf1' ? 1 : 3;
+        for (let i = 1; i <= n; i++) {
+          const y = y0 + (ch * i) / (n + 1);
+          g.add(part(a0, a1, y - 0.6, y + 0.6, -D + 1, -1, W));
+          // a stack of paper / fabric on each level
+          const col = new THREE.Color().setHSL(rand(), 0.35, 0.7);
+          g.add(part(a0 + 3, a1 - 3, y + 0.6, y + 0.6 + (type === 'shelf1' ? 8 : 3), -D + 6, -6, mat('#' + col.getHexString())));
+        }
+        if (type === 'shelf4') {
+          const col = new THREE.Color().setHSL(rand(), 0.35, 0.7);
+          g.add(part(a0 + 3, a1 - 3, y0, y0 + 3, -D + 6, -6, mat('#' + col.getHexString())));
+        }
+      } else if (type === 'bottles') {
+        // diagonal cubbies, each holding a rolled-up length of fabric
+        const [cx, cz] = f.at(mid, -D / 2);
+        const cy = (y0 + y1) / 2;
+        for (const s of [1, -1]) {
+          const geo = f.horiz
+            ? new THREE.BoxGeometry(Math.hypot(cw, ch), 1.2, D - 2)
+            : new THREE.BoxGeometry(D - 2, 1.2, Math.hypot(cw, ch));
+          const m = new THREE.Mesh(geo, W);
+          m.position.set(cx, cy, cz);
+          if (f.horiz) m.rotation.z = (s * Math.PI) / 4;
+          else m.rotation.x = (s * Math.PI) / 4;
+          g.add(m);
+        }
+        const q = cw / 4;
+        [[mid, y0 + q], [mid, y1 - q], [a0 + q, cy], [a1 - q, cy]].forEach(([a, y]) => {
+          const [x, z] = f.at(a, -D / 2);
+          const roll = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, D - 6, 14), mat(new THREE.Color().setHSL(rand(), 0.45, 0.6).getStyle()));
+          roll.position.set(x, y, z);
+          if (f.horiz) roll.rotation.x = Math.PI / 2;
+          else roll.rotation.z = Math.PI / 2;
+          g.add(roll);
+        });
+      } else if (type === 'drawers') {
+        for (let i = 0; i < 2; i++) {
+          const ya = y0 + (ch / 2) * i;
+          g.add(part(a0 + 0.3, a1 - 0.3, ya + 0.3, ya + ch / 2 - 0.3, -1.6, 0, blue));
+          knob(mid, ya + ch / 4, 0.8);
+        }
+      } else if (type === 'door' || type === 'lock') {
+        g.add(part(a0 + 0.3, a1 - 0.3, y0 + 0.3, y1 - 0.3, -1.6, 0, type === 'lock' ? W : blue));
+        knob(a1 - 4, (y0 + y1) / 2, 0.8);
+        if (type === 'lock') {
+          const [x, z] = f.at(a1 - 4, 0.3);
+          const lock = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 1, 12), mat(COLORS.steel, { metalness: 0.7 }));
+          lock.position.set(x, (y0 + y1) / 2 + 5, z);
+          lock.rotation.x = Math.PI / 2;
+          g.add(lock);
+        }
+      }
+    }));
+  },
+
+  // KALLAX desk: a 1×2 cube section at one end (inserts bottom-up), a panel
+  // leg at the other, and the top across both.
+  kdesk(p, g) {
+    const f = frontFrame(p, p.face);
+    const D = f.horiz ? p.z1 - p.z0 : p.x1 - p.x0;
+    const t = 3.6;
+    const part = (a0, a1, y0, y1, d0, d1, m) => {
+      const [xa, za] = f.at(a0, d0);
+      const [xb, zb] = f.at(a1, d1);
+      return box(Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), m);
+    };
+    const W = white();
+    const topY = p.y1 - t;
+    g.add(part(0, f.len, topY, p.y1, -D, 0, W));
+    const cubeW = 41.3;
+    g.add(part(0, t, p.y0, topY, -D, 0, W), part(cubeW - t, cubeW, p.y0, topY, -D, 0, W));
+    g.add(part(0, cubeW, p.y0, p.y0 + 3, -D, 0, W), part(0, cubeW, p.y0, topY, -D, -D + 0.6, W));
+    const ch = (topY - p.y0 - 3 - t) / 2;
+    g.add(part(0, cubeW, p.y0 + 3 + ch, p.y0 + 3 + ch + t, -D, 0, W));
+    g.add(part(f.len - t, f.len, p.y0, topY, -D, 0, W));
+    const blue = mat('#a9bccb', { roughness: 0.6 });
+    (p.inserts || []).forEach((type, i) => {
+      const y0 = p.y0 + 3 + i * (ch + t);
+      const n = type === 'drawers' ? 2 : 1;
+      for (let k = 0; k < n; k++) {
+        const ya = y0 + (ch / n) * k;
+        g.add(part(t + 0.3, cubeW - t - 0.3, ya + 0.3, ya + ch / n - 0.3, -1.6, 0, blue));
+        const [x, z] = f.at(type === 'drawers' ? cubeW / 2 : cubeW - t - 4, 0.8);
+        const kn = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), mat('#1d1d1f'));
+        kn.position.set(x, ya + ch / n / 2, z);
+        g.add(kn);
+      }
+    });
+  },
+
+  // BILLY bookcase with its table folded out; x0..x1 (or z) includes the
+  // open table, `caseDepth` is the bookcase itself.
+  billyfold(p, g) {
+    const c = { ...p };
+    if (p.face === 'w') c.x0 = p.x1 - p.caseDepth;
+    else if (p.face === 'e') c.x1 = p.x0 + p.caseDepth;
+    else if (p.face === 'n') c.z0 = p.z1 - p.caseDepth;
+    else c.z1 = p.z0 + p.caseDepth;
+    const f = frontFrame(c, p.face);
+    const D = p.caseDepth;
+    const t = 1.6;
+    const part = (a0, a1, y0, y1, d0, d1, m) => {
+      const [xa, za] = f.at(a0, d0);
+      const [xb, zb] = f.at(a1, d1);
+      return box(Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), m);
+    };
+    const W = white();
+    g.add(part(0, f.len, p.y0, p.y1, -D, -D + 0.6, W));
+    g.add(part(0, t, p.y0, p.y1, -D, 0, W), part(f.len - t, f.len, p.y0, p.y1, -D, 0, W));
+    g.add(part(0, f.len, p.y1 - t, p.y1, -D, 0, W), part(0, f.len, p.y0, p.y0 + 6, -D, 0, W));
+    for (const y of [36, 66]) {
+      g.add(part(t, f.len - t, y, y + t, -D, 0, W));
+      // thread boxes and stabilizer on the shelves
+      const col = new THREE.Color().setHSL(rand(), 0.4, 0.65);
+      g.add(part(t + 2, f.len / 2 - 1, y + t, y + t + 14, -D + 4, -3, mat('#' + col.getHexString())));
+      g.add(part(f.len / 2 + 1, f.len - t - 2, y + t, y + t + 18, -D + 4, -3, mat('#f4f4f2', { transparent: true, opacity: 0.85 })));
+    }
+    // folded-out table and its leg
+    const reach = (f.horiz ? p.z1 - p.z0 : p.x1 - p.x0) - D;
+    g.add(part(0, f.len, p.tableY - 2, p.tableY, 0, reach, W));
+    g.add(part(4, f.len - 4, p.tableY - 8, p.tableY - 2, reach - 4, reach - 2, W));
+    g.add(part(f.len / 2 - 2, f.len / 2 + 2, p.y0, p.tableY - 2, reach - 6, reach - 2, W));
+    g.add(part(f.len / 2 - 14, f.len / 2 + 14, p.y0, p.y0 + 2, reach - 8, reach, W));
+  },
+
+  // Cellular blind inside the window, pulled about halfway down.
+  blind(p, g) {
+    const drop = (p.y1 - p.y0) * 0.45;
+    g.add(box(p.x0, p.y1 - 3, p.z0, p.x1, p.y1, p.z1 + 1, mat('#ffffff')));
+    g.add(box(p.x0 + 0.5, p.y1 - 3 - drop, p.z0, p.x1 - 0.5, p.y1 - 3, p.z1, mat('#f6f3ec', { transparent: true, opacity: 0.92, roughness: 1 })));
+    g.add(box(p.x0, p.y1 - 4 - drop, p.z0, p.x1, p.y1 - 3 - drop, p.z1 + 1, mat('#ffffff')));
   },
 
   cart(p, g) {
@@ -630,8 +831,20 @@ export function createRoom(canvas, { onSelect } = {}) {
     const g = new THREE.Group();
     g.userData.piece = p;
     BUILDERS[p.kind](p, g);
+    g.visible = isActive(p);
     pieces.add(g);
     groups.set(p.id, g);
+  }
+
+  // Show the pieces of the current plan (see options.plan in data.js),
+  // minus any kinds switched off (the machines).
+  const hiddenKinds = new Set();
+  function refreshActive() {
+    for (const g of groups.values()) {
+      const p = g.userData.piece;
+      g.visible = isActive(p) && !hiddenKinds.has(p.kind);
+    }
+    select(null);
   }
 
   // Wall-mounted pieces, by wall, so they hide with that wall in the dollhouse view.
@@ -651,7 +864,7 @@ export function createRoom(canvas, { onSelect } = {}) {
     shell.userData.south.visible = c.z < R;
     const facing = { north: c.z > 0, east: c.x < R, south: c.z < R, west: c.x > 0 };
     for (const [wall, list] of Object.entries(mounted)) {
-      for (const g of list) g.visible = facing[wall];
+      for (const g of list) g.visible = facing[wall] && isActive(g.userData.piece);
     }
   }
   scene.add(pieces);
@@ -1013,8 +1226,10 @@ export function createRoom(canvas, { onSelect } = {}) {
     snapshot,
     setWallColor: c => wallMat.color.set(c),
     setVisible(kind, on) {
-      for (const g of groups.values()) if (g.userData.piece.kind === kind) g.visible = on;
+      hiddenKinds[on ? 'delete' : 'add'](kind);
+      refreshActive();
     },
+    refreshActive,
     pause: v => (running = !v),
   };
 }

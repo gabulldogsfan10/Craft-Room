@@ -18,7 +18,11 @@
   <header class="top">
     <div>
       <h1>Craft Room Planner</h1>
-      <p class="sub">11′ × 11′ room · machine &amp; hand embroidery, beading, jewelry, art · all-IKEA starter plan</p>
+      <p class="sub">11′ × 11′ room · machine &amp; hand embroidery, beading, jewelry, art · all IKEA</p>
+      <div class="plan-switch" role="group" aria-label="Layout option">
+        <button data-plan="a" aria-pressed="true">Option 1 · Starter plan</button>
+        <button data-plan="b" aria-pressed="false">Option 2 · Your KALLAX design</button>
+      </div>
     </div>
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="render" aria-selected="true">3D Rendering</button>
@@ -109,6 +113,17 @@
 
     <!-- Notes -->
     <section id="tab-notes" class="tab notes">
+      <div class="card">
+        <h3>Option 2 · Your KALLAX design</h3>
+        <ul>
+          <li><b>From your IKEA planner design:</b> two 2×4 KALLAX towers with a 1×4 KALLAX bench between them (KUGGIS boxes inside), KALLAX desks with gray-blue drawer and door inserts, and an upright 1×4 with a lockable door.</li>
+          <li><b>Window wall:</b> the towers stand in the corners and the 57⅝″ bench is centred under the 69½″ window as the window seat, about 7″ from each tower. The towers are 30⅛″ wide but only 28½″ of wall sits beside the window casing, so stand them ¾″ off the wall to clear it; they cover 1⅝″ of casing on each side, not the glass. Blinds replace the curtains, since the towers stand where curtains would stack.</li>
+          <li><b>West wall:</b> desk and upright 1×4 as in your design, plus an ALEX 9-drawer unit for beads. Everything stops 3′ 2¾″ short of the south wall so the closet door still opens fully.</li>
+          <li><b>East wall:</b> one KALLAX desk for the sewing machine, and the BILLY bookcase with foldable table for the embroidery machine. The KALLAX desk is only 15⅜″ deep, which is too shallow for an embroidery machine with its embroidery unit; the BILLY table folds out 31½″ at 29¼″ high and takes 55 lb.</li>
+          <li><b>Left out:</b> your design has three KALLAX desks. Two desks side by side need 87⅜″ of wall; no wall in this room has that much free space once the doors' swing is kept clear, so the third desk (with its two inserts) is not included. The NORDEN table stays, folded to 10¼″, for cutting fabric.</li>
+          <li>Every piece in both options is checked against the walls, the window and the three door swings with <code>node tools/check-fit.mjs</code>.</li>
+        </ul>
+      </div>
       <div class="card">
         <h3>How the room works</h3>
         <ul>
