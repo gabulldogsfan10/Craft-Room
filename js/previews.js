@@ -198,23 +198,16 @@ function setupStudio() {
 
 const cache = new Map();
 
-// Returns a data URL picture of the product, or null if there's no model for it.
-export function productImage(key) {
-  if (cache.has(key)) return cache.get(key);
-  const spec = MODELS[key];
-  if (!spec) return null;
+// Renders an object on the studio floor, seen from direction `from`.
+function render(obj, from) {
   studio ||= setupStudio();
   const { renderer, scene, key: light, floor, camera } = studio;
+  scene.add(obj);
 
-  const g = new THREE.Group();
-  if (spec.piece) BUILDERS[spec.piece.kind](spec.piece, g);
-  else spec.build(g);
-  scene.add(g);
-
-  const bounds = new THREE.Box3().setFromObject(g);
+  const bounds = new THREE.Box3().setFromObject(obj);
   const center = bounds.getCenter(new THREE.Vector3());
   const radius = bounds.getBoundingSphere(new THREE.Sphere()).radius;
-  const dir = new THREE.Vector3(...spec.from).normalize();
+  const dir = new THREE.Vector3(...from).normalize();
   const dist = (radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.08;
   camera.position.copy(center).addScaledVector(dir, dist);
   camera.near = dist / 20;
@@ -224,14 +217,50 @@ export function productImage(key) {
 
   floor.position.set(center.x, bounds.min.y - 0.05, center.z);
   floor.scale.setScalar(radius * 8);
-  light.position.copy(center).add(new THREE.Vector3(radius * 1.5, radius * 3, radius * 2));
+  // key light from the camera's side, so fronts facing any wall are lit
+  const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(radius * 1.2);
+  light.position.copy(center).addScaledVector(dir, radius * 2).add(side).add(new THREE.Vector3(0, radius * 3, 0));
   light.target.position.copy(center);
   Object.assign(light.shadow.camera, { left: -radius * 2, right: radius * 2, top: radius * 2, bottom: -radius * 2, near: 1, far: radius * 10 });
   light.shadow.camera.updateProjectionMatrix();
 
   renderer.render(scene, camera);
   const url = renderer.domElement.toDataURL('image/png');
-  scene.remove(g);
+  scene.remove(obj);
+  return url;
+}
+
+// Picture of a product on its own, for parts that never stand alone in the
+// room (inserts, hooks, boxes). Returns null if there's no model for it.
+export function productImage(key) {
+  if (cache.has(key)) return cache.get(key);
+  const spec = MODELS[key];
+  if (!spec) return null;
+  const g = new THREE.Group();
+  if (spec.piece) BUILDERS[spec.piece.kind](spec.piece, g);
+  else spec.build(g);
+  const url = render(g, spec.from);
+  cache.set(key, url);
+  return url;
+}
+
+// Camera direction that looks at a piece's front, slightly from above.
+const FRONT_VIEW = {
+  s: [0.55, 0.45, 1],
+  n: [-0.55, 0.45, -1],
+  e: [1, 0.45, -0.55],
+  w: [-1, 0.45, 0.55],
+};
+
+// Picture of a piece exactly as it is in the room: `group` is that piece's
+// object from the 3D scene, copied so the room is untouched.
+export function pieceImage(piece, group, face) {
+  const key = `piece:${piece.id}`;
+  if (cache.has(key)) return cache.get(key);
+  const copy = group.clone(true);
+  copy.visible = true;
+  copy.traverse(o => (o.visible = true));
+  const url = render(copy, FRONT_VIEW[face] || FRONT_VIEW.s);
   cache.set(key, url);
   return url;
 }

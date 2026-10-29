@@ -1,6 +1,6 @@
-import { ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, productByKey, ikeaUrl, options, activeProducts } from './data.js';
+import { ROOM, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, productByKey, ikeaUrl, options, activeProducts, activePieces } from './data.js';
 import { createRoom } from './scene.js';
-import { productImage } from './previews.js';
+import { productImage, pieceImage } from './previews.js';
 import { floorPlan, elevation, wallSummary, WALL_NAMES, feetInches } from './drawings.js';
 
 const $ = s => document.querySelector(s);
@@ -17,9 +17,29 @@ const store = {
 
 // ------------------------------------------------------------ piece details
 
-function productCard(prod, sizeNote) {
+// Which way a piece faces, so its picture shows the front.
+function faceOf(p) {
+  if (p.face && 'nsew'.includes(p.face)) return p.face;
+  if (p.kind === 'kallax') return 'e';
+  const R = ROOM.size;
+  if (p.x1 > R - 15) return 'w';
+  if (p.x0 < 15) return 'e';
+  if (p.z1 > R - 15) return 'n';
+  return 's';
+}
+
+// The picture for a card: the clicked piece as it is in the room, or for a
+// product, the first piece in the current option that uses it. Products that
+// never stand alone (inserts, hooks, boxes) get their own small model.
+function imageFor(prod, piece) {
+  const p = piece || activePieces().find(x => x.p === prod.key);
+  const group = p && room.pieceGroup(p.id);
+  return group ? pieceImage(p, group, faceOf(p)) : productImage(prod.key);
+}
+
+function productCard(prod, sizeNote, piece) {
   const zone = ZONES[prod.zone];
-  const img = productImage(prod.key);
+  const img = imageFor(prod, piece);
   return `
     ${img ? `<figure class="item-figure">
       <img class="item-img" src="${img}" alt="Rendering of the ${esc(prod.name)}">
@@ -37,7 +57,7 @@ function pieceHtml(piece) {
   if (!piece) return '<h3>Click any piece</h3><p>Select furniture to see a picture of the IKEA product, its size, what it stores and a link to buy it.</p>';
   if (!piece.p) return `<h3>${esc(piece.prop)}</h3><p>Shown for scale – not part of the shopping list.</p>`;
   const size = `${feetInches(piece.x1 - piece.x0)} × ${feetInches(piece.z1 - piece.z0)} footprint, ${feetInches(piece.y1 - piece.y0)} tall`;
-  return productCard(productByKey[piece.p], size);
+  return productCard(productByKey[piece.p], size, piece);
 }
 
 // ------------------------------------------------------------ 3D tab
@@ -247,7 +267,7 @@ function fillThumbs() {
     const start = performance.now();
     while (pending.length && performance.now() - start < 30) {
       const img = pending.shift();
-      const url = productImage(img.dataset.thumb);
+      const url = imageFor(productByKey[img.dataset.thumb]);
       if (url) img.src = url;
     }
     if (pending.length) requestAnimationFrame(step);

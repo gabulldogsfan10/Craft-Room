@@ -317,19 +317,26 @@ export const BUILDERS = {
     g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, mat(COLORS.trim)));
   },
 
+  // HEKTAR floor lamp with 3 spotlights
   floorlamp(p, g) {
     const cx = (p.x0 + p.x1) / 2;
     const cz = (p.z0 + p.z1) / 2;
     const m = mat(COLORS.grey, { metalness: 0.4, roughness: 0.5 });
     g.add(cyl(cx, 0, cz, 14, 2, m, 24));
-    g.add(cyl(cx, 2, cz, 1.2, p.y1 - 25, m));
-    const shade = new THREE.Mesh(new THREE.CylinderGeometry(8, 16, 22, 24, 1, true), mat(COLORS.grey, { side: THREE.DoubleSide, metalness: 0.4 }));
-    shade.position.set(cx - 10, p.y1 - 12, cz + 10);
-    shade.rotation.set(0.5, 0, 0.5);
-    g.add(shade);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(5, 12, 8), new THREE.MeshBasicMaterial({ color: '#fff3d6' }));
-    bulb.position.set(cx - 14, p.y1 - 18, cz + 14);
-    g.add(bulb);
+    g.add(cyl(cx, 2, cz, 1.2, p.y1 - 4, m));
+    const spots = [[p.y1 - 6, 0.6, -0.5], [p.y1 - 34, -0.5, 0.4], [p.y1 - 62, 0.4, 0.9]];
+    for (const [y, rx, ry] of spots) {
+      const arm = new THREE.Group();
+      arm.position.set(cx, y, cz);
+      arm.rotation.set(rx, ry, 0);
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 6.5, 12, 20, 1, true), mat(COLORS.grey, { side: THREE.DoubleSide, metalness: 0.4 }));
+      shade.position.set(0, -2, 8);
+      shade.rotation.x = Math.PI / 2.4;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(2.6, 10, 8), new THREE.MeshBasicMaterial({ color: '#fff3d6' }));
+      bulb.position.set(0, -4, 11);
+      arm.add(shade, bulb, box(-0.6, -0.6, 0, 0.6, 0.6, 6, m));
+      g.add(arm);
+    }
   },
 
   alex(p, g) {
@@ -438,20 +445,21 @@ export const BUILDERS = {
   officechair(p, g) {
     const cx = (p.x0 + p.x1) / 2;
     const cz = (p.z0 + p.z1) / 2;
-    const fabric = mat('#4b4f57', { roughness: 0.9 });
-    const black = mat('#1f1f22');
+    // LÅNGFJÄLL in Gunnared beige with a white base
+    const fabric = mat('#cfc4b2', { roughness: 0.9 });
+    const base = mat('#f0efeb', { roughness: 0.4 });
     for (let i = 0; i < 5; i++) {
       const a = (i / 5) * Math.PI * 2;
-      const leg = box(-1.5, 0, 0, 1.5, 3, 30, black);
+      const leg = box(-1.5, 0, 0, 1.5, 3, 30, base);
       leg.position.set(cx + Math.sin(a) * 14, 6, cz + Math.cos(a) * 14);
       leg.rotation.y = a;
       g.add(leg);
     }
-    g.add(cyl(cx, 6, cz, 2.5, 38, black));
+    g.add(cyl(cx, 6, cz, 2.5, 38, base));
     g.add(box(cx - 24, 44, cz - 24, cx + 24, 51, cz + 24, fabric));
     // back on the side away from the desk (desk is east)
     g.add(box(cx - 26, 52, cz - 22, cx - 22, p.y1, cz + 22, fabric));
-    for (const s of [-1, 1]) g.add(box(cx - 18, 62, cz + s * 25 - 2, cx + 14, 64, cz + s * 25 + 2, black));
+    for (const s of [-1, 1]) g.add(box(cx - 18, 62, cz + s * 25 - 2, cx + 14, 64, cz + s * 25 + 2, base));
   },
 
   kallax(p, g) {
@@ -1220,6 +1228,7 @@ export function createRoom(canvas, { onSelect } = {}) {
   return {
     views: VIEWS,
     setView,
+    pieceGroup: id => groups.get(id),
     hold,
     reset: () => currentView && setView(currentView),
     select,

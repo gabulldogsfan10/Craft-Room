@@ -150,7 +150,10 @@ export function floorPlan(onSelect) {
   }
 
   // Pieces (rug first so it sits under everything)
-  const sorted = activePieces().filter(p => !PLAN_SKIP.has(p.kind)).sort((a, b) => (a.kind === 'rug' ? -1 : b.kind === 'rug' ? 1 : 0));
+  // Draw the rug first and counters under the drawer units they sit on, so
+  // every piece stays clickable.
+  const layer = p => (p.kind === 'rug' ? 0 : p.kind === 'top' ? 1 : 2);
+  const sorted = activePieces().filter(p => !PLAN_SKIP.has(p.kind)).sort((a, b) => layer(a) - layer(b));
   for (const p of sorted) {
     const g = el('g', { class: 'piece', 'data-id': p.id });
     const c = zoneColor(p);
