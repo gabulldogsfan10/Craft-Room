@@ -1,7 +1,7 @@
 // Three.js model of the room and the proposed IKEA furniture.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ROOM, PIECES, isActive } from './data.js';
+import { ROOM, PIECES, isActive, resolve } from './data.js';
 
 const R = ROOM.size;
 const H = ROOM.height;
@@ -557,40 +557,45 @@ export const BUILDERS = {
     g.add(m);
   },
 
+  // NORDEN gateleg table: the 10¼″ drawer section (midX0..midX1) with a
+  // 24¾″ leaf on each side, raised or hanging down per `leaves`.
   norden(p, g) {
     const W = white();
     const top = 74;
-    if (p.folded) {
-      // both leaves down: just the 10¼″ drawer section with the leaves hanging
-      g.add(box(p.x0 + 1, 0, p.z0 + 2, p.x1 - 1, top - 3, p.z1 - 2, W));
-      g.add(box(p.x0, top - 3, p.z0, p.x1, top, p.z1, W));
-      g.add(box(p.x0 - 2, 12, p.z0, p.x0, top - 3, p.z1, W), box(p.x1, 12, p.z0, p.x1 + 2, top - 3, p.z1, W));
-      for (let i = 0; i < 3; i++) {
-        const y0 = 8 + i * 20;
-        g.add(box(p.x0 + 2, y0, p.z1 - 2, p.x1 - 2, y0 + 18, p.z1 - 1, W), box(p.x0 + 2, y0, p.z0 + 1, p.x1 - 2, y0 + 18, p.z0 + 2, W));
-      }
-      return;
-    }
-    // drawer section (10¼″) at the east end, one 24¾″ leaf raised to the west
-    const mx0 = p.x1 - 26;
-    g.add(box(mx0, 0, p.z0 + 2, p.x1, top - 3, p.z1 - 2, W));
+    const mid0 = p.midX0 ?? p.x1 - 26;
+    const mid1 = p.midX1 ?? p.x1;
+    const leaves = p.leaves ?? { w: mid0 - p.x0 > 1, e: p.x1 - mid1 > 1 };
+    const leaf = 63;
+    g.add(box(mid0 + 1, 0, p.z0 + 2, mid1 - 1, top - 3, p.z1 - 2, W));
     for (let i = 0; i < 3; i++) {
       const y0 = 8 + i * 20;
-      g.add(box(mx0 + 1, y0, p.z1 - 2, p.x1 - 1, y0 + 18, p.z1 - 1, W));
-      g.add(box(mx0 + 1, y0, p.z0 + 1, p.x1 - 1, y0 + 18, p.z0 + 2, W));
+      g.add(box(mid0 + 2, y0, p.z1 - 2, mid1 - 2, y0 + 18, p.z1 - 1, W), box(mid0 + 2, y0, p.z0 + 1, mid1 - 2, y0 + 18, p.z0 + 2, W));
     }
-    g.add(box(p.x0, top - 3, p.z0, p.x1, top, p.z1, W));
-    // gateleg
-    g.add(box(p.x0 + 6, 0, p.z0 + 4, p.x0 + 10, top - 3, p.z0 + 8, W));
-    g.add(box(p.x0 + 6, 0, p.z1 - 8, p.x0 + 10, top - 3, p.z1 - 4, W));
-    g.add(box(p.x0 + 6, 6, p.z0 + 8, p.x0 + 10, 10, p.z1 - 8, W));
-    // a beading tray + cutting mat on top
-    g.add(box(p.x0 + 10, top, p.z0 + 10, p.x0 + 55, top + 0.3, p.z0 + 45, mat('#3f7d5a')));
-    g.add(box(p.x0 + 20, top, p.z0 + 52, p.x0 + 50, top + 1.5, p.z0 + 72, mat('#e6e1d8')));
-    for (let i = 0; i < 14; i++) {
-      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 5), mat(new THREE.Color().setHSL(rand(), 0.7, 0.55).getStyle()));
-      bead.position.set(p.x0 + 22 + rand() * 26, top + 2, p.z0 + 54 + rand() * 16);
-      g.add(bead);
+    g.add(box(mid0, top - 3, p.z0, mid1, top, p.z1, W));
+    for (const side of ['w', 'e']) {
+      const [a, b] = side === 'w' ? [mid0 - leaf, mid0] : [mid1, mid1 + leaf];
+      if (leaves[side]) {
+        g.add(box(a, top - 3, p.z0, b, top, p.z1, W));
+        // gateleg swung out under the far edge
+        const lx = side === 'w' ? a + 6 : b - 10;
+        g.add(box(lx, 0, p.z0 + 4, lx + 4, top - 3, p.z0 + 8, W), box(lx, 0, p.z1 - 8, lx + 4, top - 3, p.z1 - 4, W));
+        g.add(box(lx, 6, p.z0 + 8, lx + 4, 10, p.z1 - 8, W));
+      } else {
+        // leaf hanging down beside the drawer section
+        const hx = side === 'w' ? mid0 - 2 : mid1;
+        g.add(box(hx, 12, p.z0, hx + 2, top - 3, p.z1, W));
+      }
+    }
+    // a cutting mat and bead board on the first raised leaf
+    const work = leaves.w ? mid0 - leaf : leaves.e ? mid1 : null;
+    if (work !== null) {
+      g.add(box(work + 6, top, p.z0 + 10, work + 51, top + 0.3, p.z0 + 45, mat('#3f7d5a')));
+      g.add(box(work + 16, top, p.z0 + 52, work + 46, top + 1.5, p.z0 + 72, mat('#e6e1d8')));
+      for (let i = 0; i < 14; i++) {
+        const bead = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 5), mat(new THREE.Color().setHSL(rand(), 0.7, 0.55).getStyle()));
+        bead.position.set(work + 18 + rand() * 26, top + 2, p.z0 + 54 + rand() * 16);
+        g.add(bead);
+      }
     }
   },
 
@@ -779,6 +784,12 @@ export const BUILDERS = {
       g.add(part(t + 2, f.len / 2 - 1, y + t, y + t + 14, -D + 4, -3, mat('#' + col.getHexString())));
       g.add(part(f.len / 2 + 1, f.len - t - 2, y + t, y + t + 18, -D + 4, -3, mat('#f4f4f2', { transparent: true, opacity: 0.85 })));
     }
+    if (p.tableOpen === false) {
+      // table folded up flat against the front of the bookcase
+      g.add(part(0.5, f.len - 0.5, p.y1 - 80, p.y1 - 1, 0, 2, W));
+      g.add(part(f.len / 2 - 6, f.len / 2 + 6, p.y1 - 12, p.y1 - 10, 2, 3, mat('#c9c6bf')));
+      return;
+    }
     // folded-out table and its leg
     const reach = (f.horiz ? p.z1 - p.z0 : p.x1 - p.x0) - D;
     g.add(part(0, f.len, p.tableY - 2, p.tableY, 0, reach, W));
@@ -835,13 +846,19 @@ export function createRoom(canvas, { onSelect } = {}) {
 
   const pieces = new THREE.Group();
   const groups = new Map();
-  for (const p of PIECES) {
+  // Each piece is built in its current fold state (see resolve in data.js).
+  function buildPiece(raw) {
+    const p = resolve(raw);
     const g = new THREE.Group();
     g.userData.piece = p;
     BUILDERS[p.kind](p, g);
-    g.visible = isActive(p);
+    g.visible = isActive(raw);
+    return g;
+  }
+  for (const raw of PIECES) {
+    const g = buildPiece(raw);
     pieces.add(g);
-    groups.set(p.id, g);
+    groups.set(raw.id, g);
   }
 
   // Show the pieces of the current plan (see options.plan in data.js),
@@ -1239,6 +1256,15 @@ export function createRoom(canvas, { onSelect } = {}) {
       refreshActive();
     },
     refreshActive,
+    // Rebuild a piece after its fold state changes.
+    rebuildPiece(id) {
+      const old = groups.get(id);
+      const g = buildPiece(PIECES.find(p => p.id === id));
+      pieces.remove(old);
+      pieces.add(g);
+      groups.set(id, g);
+      refreshActive();
+    },
     pause: v => (running = !v),
   };
 }

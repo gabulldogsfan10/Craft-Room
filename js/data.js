@@ -98,7 +98,7 @@ export const PRODUCTS = [
   // --- Centre table ------------------------------------------------------
   { key: 'norden', url: 'https://www.ikea.com/us/en/p/norden-gateleg-table-white-10423886/', zone: 'center', name: 'NORDEN gateleg table', spec: 'white, 10¼/35/59⅞×31½″', qty: 1, price: 250,
     why: 'Folds to 10¼″ when you need floor space, opens to 59⅞″ for cutting fabric, laying out beading or big art. Drawers in the middle for rotary cutters and rulers.' },
-  { key: 'teodores', url: 'https://www.ikea.com/us/en/p/teodores-chair-white-30486156/', zone: 'center', name: 'TEODORES chair', spec: 'white', qty: 2, price: 35,
+  { key: 'teodores', only: 'a', url: 'https://www.ikea.com/us/en/p/teodores-chair-white-30486156/', zone: 'center', name: 'TEODORES chair', spec: 'white', qty: 2, price: 35,
     why: 'Light, wipeable chairs that tuck under the table.' },
   { key: 'raskog', url: 'https://www.ikea.com/us/en/p/raskog-utility-cart-white-30586783/', zone: 'center', name: 'RÅSKOG utility cart', spec: 'white, 13¾×17¾×30⅜″', qty: 1, price: 40,
     why: 'Rolling caddy – roll it to the window seat for hand embroidery, or to the table for beading.' },
@@ -199,7 +199,7 @@ export const PIECES = [
   // Centre
   { id: 'rug', p: 'lohals', kind: 'rug', x0: 62, z0: 50, x1: 222, z1: 280, y0: 0, y1: 0.8 },
   // One leaf raised (35″ long); the drawer section sits at the east end.
-  { id: 'norden', only: 'a', p: 'norden', kind: 'norden', x0: 95, z0: 110, x1: 184, z1: 190, y0: 0, y1: 74 },
+  { id: 'norden', only: 'a', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'one', midX0: 158, midX1: 184, x0: 95, z0: 110, x1: 184, z1: 190, y0: 0, y1: 74 },
   { id: 'chair-1', only: 'a', p: 'teodores', kind: 'chair', x0: 117, z0: 196, x1: 160, z1: 240, y0: 0, y1: 80, face: 'n' },
   { id: 'chair-2', only: 'a', p: 'teodores', kind: 'chair', x0: 51, z0: 128, x1: 93, z1: 172, y0: 0, y1: 80, face: 'e' },
   { id: 'raskog', p: 'raskog', kind: 'cart', x0: 190, z0: 250, x1: 225, z1: 295, y0: 0, y1: 78 },
@@ -231,25 +231,23 @@ export const PIECES = [
     cells: [['lock'], ['files'], ['books'], ['books']] },
   { id: 'b-alex9', only: 'b', p: 'alex-9-b', kind: 'alex', x0: 0, z0: 201, x1: 48, z1: 237, y0: 0, y1: 116, drawers: 9, face: 'e', extras: [{ p: 'kuggis-small-b', qty: 6 }] },
   { id: 'b-skadis-w', only: 'b', p: 'skadis-76-b', kind: 'skadis', x0: 0, z0: 62, x1: 2, z1: 138, y0: 95, y1: 151, face: 'e', extras: [{ p: 'skadis-hook', qty: 1 }, { p: 'skadis-shelf', qty: 1 }] },
-  { id: 'b-chair-w', only: 'b', p: 'teodores', kind: 'chair', x0: 45, z0: 99, x1: 88, z1: 143, y0: 0, y1: 80, face: 'w' },
 
   // East: KALLAX desk (sewing) + BILLY with the table folded out (embroidery).
   // x0 of the BILLY is the open table's reach into the room.
   { id: 'b-desk-e', only: 'b', p: 'kallax-desk', kind: 'kdesk', face: 'w', x0: R - 39, z0: 44, x1: R, z1: 155, y0: 0, y1: 77, inserts: ['door', 'drawers'] },
-  { id: 'b-billy', only: 'b', p: 'billy-fold', kind: 'billyfold', face: 'w', x0: R - 112.4, z0: 163, x1: R, z1: 243, y0: 0, y1: 106, caseDepth: 32.4, tableY: 74.3 },
+  { id: 'b-billy', only: 'b', p: 'billy-fold', kind: 'billyfold', fold: 'billy', foldDefault: 'open', face: 'w', x0: R - 112.4, z0: 163, x1: R, z1: 243, y0: 0, y1: 106, caseDepth: 32.4, tableY: 74.3 },
   { id: 'b-skadis-e1', only: 'b', p: 'skadis-76-b', kind: 'skadis', hoops: 1, x0: R - 2, z0: 60, x1: R, z1: 136, y0: 110, y1: 166, face: 'w', extras: [{ p: 'skadis-hook', qty: 2 }, { p: 'skadis-container', qty: 1 }] },
   { id: 'b-skadis-e2', only: 'b', p: 'skadis-76-b', kind: 'skadis', hoops: 2, x0: R - 2, z0: 165, x1: R, z1: 241, y0: 120, y1: 176, face: 'w', extras: [{ p: 'skadis-hook', qty: 1 }, { p: 'skadis-container', qty: 1 }, { p: 'skadis-shelf', qty: 1 }] },
   { id: 'b-lack', only: 'b', p: 'lack-shelf', kind: 'shelf', x0: R - 26, z0: 90, x1: R, z1: 200, y0: 188, y1: 193 },
   { id: 'b-tertial-1', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 104, x1: R - 4, z1: 114, y0: 77, y1: 128 },
   { id: 'b-tertial-2', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 228, x1: R - 4, z1: 238, y0: 106, y1: 157 },
   { id: 'b-machine-2', only: 'b', p: null, prop: 'Your sewing machine', kind: 'machine', x0: R - 34, z0: 58, x1: R - 4, z1: 98, y0: 77, y1: 106 },
-  { id: 'b-machine-1', only: 'b', p: null, prop: 'Your embroidery machine', kind: 'machine', x0: R - 100, z0: 195, x1: R - 60, z1: 237, y0: 74.3, y1: 106.5 },
+  { id: 'b-machine-1', only: 'b', whenOpen: 'b-billy', p: null, prop: 'Your embroidery machine', kind: 'machine', x0: R - 100, z0: 195, x1: R - 60, z1: 237, y0: 74.3, y1: 106.5 },
   { id: 'b-chair-office', only: 'b', p: 'langfjall', kind: 'officechair', x0: 164, z0: 176, x1: 219, z1: 231, y0: 0, y1: 110, face: 'e' },
-  { id: 'b-chair-e', only: 'b', p: 'teodores', kind: 'chair', x0: 250, z0: 57, x1: 293, z1: 100, y0: 0, y1: 80, face: 'e' },
 
-  // Centre: NORDEN folded down to 10¼″ so the desks and BILLY table have
-  // room; open it for cutting fabric.
-  { id: 'b-norden', only: 'b', p: 'norden', kind: 'norden', folded: true, x0: 110, z0: 120, x1: 136, z1: 200, y0: 0, y1: 74 },
+  // Centre: NORDEN starts folded down to 10¼″ so the desks and BILLY table
+  // have room; raise its leaves for cutting fabric.
+  { id: 'b-norden', only: 'b', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'folded', midX0: 110, midX1: 136, x0: 110, z0: 120, x1: 136, z1: 200, y0: 0, y1: 74 },
 ];
 
 // Camera presets that match where each photo was taken from.
@@ -279,9 +277,41 @@ export const PLANS = {
   a: { name: 'Option 1 · Starter plan' },
   b: { name: 'Option 2 · Your KALLAX design' },
 };
-export const options = { plan: 'a' };
-export const isActive = item => !item.only || item.only === options.plan;
-export const activePieces = () => PIECES.filter(isActive);
+export const options = { plan: 'a', fold: {} };
+
+// Folding tables. A piece with `fold` can be switched between these states;
+// `foldDefault` is where it starts. A piece with `whenOpen` (the machine on
+// the BILLY table) only shows while that table is open.
+export const FOLD_STATES = {
+  norden: [['folded', 'Folded'], ['one', 'One leaf up'], ['both', 'Both leaves up']],
+  billy: [['folded', 'Folded up'], ['open', 'Table out']],
+};
+const NORDEN_LEAF = 63; // each leaf adds 24¾″
+const pieceById = id => PIECES.find(p => p.id === id);
+export const foldState = p => options.fold[p.id] ?? p.foldDefault;
+
+// The piece with its footprint for the current fold state.
+export function resolve(p) {
+  if (!p.fold) return p;
+  const state = foldState(p);
+  if (p.fold === 'norden') {
+    const leaves = { w: state !== 'folded', e: state === 'both' };
+    return { ...p, foldState: state, leaves, x0: p.midX0 - (leaves.w ? NORDEN_LEAF : 0), x1: p.midX1 + (leaves.e ? NORDEN_LEAF : 0) };
+  }
+  const open = state === 'open';
+  const c = { ...p, foldState: state, tableOpen: open };
+  if (!open) {
+    if (p.face === 'w') c.x0 = p.x1 - p.caseDepth;
+    else if (p.face === 'e') c.x1 = p.x0 + p.caseDepth;
+    else if (p.face === 'n') c.z0 = p.z1 - p.caseDepth;
+    else c.z1 = p.z0 + p.caseDepth;
+  }
+  return c;
+}
+
+export const isActive = item => (!item.only || item.only === options.plan)
+  && (!item.whenOpen || foldState(pieceById(item.whenOpen)) === 'open');
+export const activePieces = () => PIECES.filter(isActive).map(resolve);
 export const activeProducts = () => PRODUCTS.filter(isActive);
 
 // What goes in or on a piece: KALLAX inserts and boxes from its cubes, desk

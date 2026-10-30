@@ -234,6 +234,16 @@ dialog#item-dialog::backdrop { background: rgb(20 12 26 / 0.45); }
   border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 20px; line-height: 1; z-index: 1;
 }
 
+/* Folding tables */
+.fold-switch { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); margin-bottom: 10px; }
+.fold-switch button { border: 0; border-radius: 999px; padding: 5px 11px; background: none; color: var(--muted); font-size: 13px; }
+.fold-switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.fold-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fold-hint { margin: -4px 0 10px; font-size: 13px; }
+.fold-row { display: flex; flex-direction: column; gap: 4px; }
+.fold-row span { font-size: 14px; font-weight: 600; }
+.fold-row .fold-switch { margin-bottom: 8px; }
+
 /* Accessories on item cards */
 .acc { margin: 6px 0 12px; }
 .acc h4 { margin: 10px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }

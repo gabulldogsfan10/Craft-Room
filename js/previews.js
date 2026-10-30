@@ -255,7 +255,7 @@ const FRONT_VIEW = {
 // Picture of a piece exactly as it is in the room: `group` is that piece's
 // object from the 3D scene, copied so the room is untouched.
 export function pieceImage(piece, group, face) {
-  const key = `piece:${piece.id}`;
+  const key = `piece:${piece.id}:${piece.foldState || ''}`;
   if (cache.has(key)) return cache.get(key);
   const copy = group.clone(true);
   copy.visible = true;

@@ -1,4 +1,4 @@
-import { ROOM, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, productByKey, ikeaUrl, options, activeProducts, activePieces, accessoriesOf, accessoriesOfProduct } from './data.js';
+import { ROOM, PIECES, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, FOLD_STATES, productByKey, ikeaUrl, options, activeProducts, activePieces, accessoriesOf, accessoriesOfProduct, foldState, resolve } from './data.js';
 import { createRoom } from './scene.js';
 import { productImage, pieceImage } from './previews.js';
 import { floorPlan, elevation, wallSummary, WALL_NAMES, feetInches } from './drawings.js';
@@ -94,11 +94,20 @@ function productCard(prod, sizeNote, piece) {
     <a class="item-link" href="${ikeaUrl(prod)}" target="_blank" rel="noopener">${prod.url ? 'View this item on IKEA' : 'Search for this item on IKEA'} ↗</a>`;
 }
 
+// Buttons that fold or unfold a table, e.g. Folded · One leaf up · Both leaves up.
+function foldButtons(piece) {
+  if (!piece.fold) return '';
+  const state = foldState(piece);
+  return `<div class="fold-switch" role="group" aria-label="Fold the ${esc(productByKey[piece.p].name)}">
+    ${FOLD_STATES[piece.fold].map(([value, label]) => `<button data-fold-id="${piece.id}" data-fold-state="${value}" aria-pressed="${value === state}">${label}</button>`).join('')}
+  </div>${state === 'both' ? '<p class="muted fold-hint">With both leaves up, roll the chair out of the way first.</p>' : ''}`;
+}
+
 function pieceHtml(piece) {
   if (!piece) return '<h3>Click any piece</h3><p>Select furniture to see a picture of the IKEA product, its size, what it stores and a link to buy it.</p>';
   if (!piece.p) return `<h3>${esc(piece.prop)}</h3><p>Shown for scale – not part of the shopping list.</p>`;
   const size = `${feetInches(piece.x1 - piece.x0)} × ${feetInches(piece.z1 - piece.z0)} footprint, ${feetInches(piece.y1 - piece.y0)} tall`;
-  return productCard(productByKey[piece.p], size, piece);
+  return foldButtons(piece) + productCard(productByKey[piece.p], size, piece);
 }
 
 // ------------------------------------------------------------ 3D tab
@@ -376,6 +385,32 @@ showTab(location.hash.slice(1) && document.getElementById(`tab-${location.hash.s
 // ------------------------------------------------------------ plan options
 
 // Option 1 (starter plan) or Option 2 (your KALLAX design); see PLANS in data.js.
+// The folding tables in the current option, with their fold buttons.
+function renderFoldPanel() {
+  const tables = activePieces().filter(p => p.fold);
+  $('#fold-panel').hidden = !tables.length;
+  $('#fold-panel').innerHTML = '<h3>Folding tables</h3>' + tables.map(p => `
+    <div class="fold-row"><span>${esc(productByKey[p.p].name.replace(/ with .*| gateleg.*/, ''))}</span>${foldButtons(p)}</div>`).join('');
+}
+
+function setFold(id, state) {
+  options.fold[id] = state;
+  store.set('fold', options.fold);
+  room.rebuildPiece(id);
+  renderDrawings();
+  renderFoldPanel();
+  snapshotsStale = true;
+}
+
+// Fold buttons can be on any card; redraw that card in the new state.
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-fold-id]');
+  if (!btn) return;
+  const host = btn.closest('#piece-info, #plan-info');
+  setFold(btn.dataset.foldId, btn.dataset.foldState);
+  if (host) host.innerHTML = pieceHtml(resolve(PIECES.find(p => p.id === btn.dataset.foldId)));
+});
+
 function setPlan(plan) {
   options.plan = plan;
   store.set('plan', plan);
@@ -383,9 +418,19 @@ function setPlan(plan) {
   room.refreshActive();
   $('#piece-info').innerHTML = pieceHtml(null);
   renderDrawings();
+  renderFoldPanel();
   renderList();
   snapshotsStale = true;
   if (document.body.dataset.tab === 'photos') refreshSnapshots();
 }
 document.querySelectorAll('[data-plan]').forEach(b => (b.onclick = () => setPlan(b.dataset.plan)));
+// Restore saved fold states for tables that still exist.
+const savedFold = store.get('fold', {});
+for (const [id, state] of Object.entries(savedFold)) {
+  const p = PIECES.find(x => x.id === id);
+  if (p && p.fold && FOLD_STATES[p.fold].some(([v]) => v === state)) {
+    options.fold[id] = state;
+    room.rebuildPiece(id);
+  }
+}
 setPlan(PLANS[store.get('plan', 'a')] ? store.get('plan', 'a') : 'a');
