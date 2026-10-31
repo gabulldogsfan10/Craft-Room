@@ -1,4 +1,4 @@
-import { ROOM, PIECES, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, FOLD_STATES, productByKey, ikeaUrl, options, activeProducts, activePieces, accessoriesOf, accessoriesOfProduct, foldState, resolve } from './data.js';
+import { ROOM, PIECES, ZONES, PHOTO_VIEWS, WALL_COLORS, PLANS, FOLD_STATES, productByKey, ikeaUrl, options, activeProducts, activePieces, accessoriesOf, accessoriesOfProduct, foldState, isTurned, resolve } from './data.js';
 import { createRoom } from './scene.js';
 import { productImage, pieceImage } from './previews.js';
 import { floorPlan, elevation, wallSummary, WALL_NAMES, feetInches } from './drawings.js';
@@ -95,12 +95,38 @@ function productCard(prod, sizeNote, piece) {
 }
 
 // Buttons that fold or unfold a table, e.g. Folded · One leaf up · Both leaves up.
+// What a table in its current position runs into: other furniture standing
+// on the floor, or a door's swing.
+const FLOOR_RIDERS = new Set(['rug', 'cushion', 'pillow', 'machine', 'tertial', 'blind', 'curtain', 'rod']);
+function blockers(piece) {
+  const over = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0) > 0.5;
+  const hits = activePieces().filter(o => o.id !== piece.id && o.p && !FLOOR_RIDERS.has(o.kind)
+    && over(o.x0, o.x1, piece.x0, piece.x1) && over(o.z0, o.z1, piece.z0, piece.z1) && o.y0 < piece.y1)
+    .map(o => productByKey[o.p].name.replace(/,.*$/, ''));
+  const R = ROOM.size;
+  const { closet, entry } = ROOM;
+  const leaf = (closet.x1 - closet.x0) / 2;
+  const swings = [[closet.x0, leaf, 1], [closet.x1, leaf, -1], [entry.hingeX, entry.x1 - entry.x0, -1]];
+  for (const [hx, r, dir] of swings) {
+    const nx = Math.min(Math.max(hx, piece.x0), piece.x1);
+    const nz = Math.min(Math.max(R, piece.z0), piece.z1);
+    const inQuadrant = dir > 0 ? piece.x1 > hx + 0.5 : piece.x0 < hx - 0.5;
+    if (inQuadrant && Math.hypot(nx - hx, nz - R) < r - 0.5) hits.push(hx === entry.hingeX ? 'the entry door' : 'a closet door');
+  }
+  return [...new Set(hits)];
+}
+
+// Buttons that fold or unfold a table (and turn the NORDEN), plus a note
+// when its current position runs into something.
 function foldButtons(piece) {
   if (!piece.fold) return '';
   const state = foldState(piece);
-  return `<div class="fold-switch" role="group" aria-label="Fold the ${esc(productByKey[piece.p].name)}">
+  const name = esc(productByKey[piece.p].name);
+  const hits = blockers(piece);
+  return `<div class="fold-switch" role="group" aria-label="Fold the ${name}">
     ${FOLD_STATES[piece.fold].map(([value, label]) => `<button data-fold-id="${piece.id}" data-fold-state="${value}" aria-pressed="${value === state}">${label}</button>`).join('')}
-  </div>${state === 'both' ? '<p class="muted fold-hint">With both leaves up, roll the chair out of the way first.</p>' : ''}`;
+  </div>${piece.turnable ? `<button class="turn-btn" data-turn-id="${piece.id}" aria-pressed="${isTurned(piece)}" aria-label="Turn the ${name} 90 degrees">↻ Turn 90°</button>` : ''}
+  ${hits.length ? `<p class="muted fold-hint">In this position it runs into: ${esc(hits.join(', '))}. Move ${hits.length > 1 ? 'them' : 'it'} first.</p>` : ''}`;
 }
 
 function pieceHtml(piece) {
@@ -396,19 +422,31 @@ function renderFoldPanel() {
 function setFold(id, state) {
   options.fold[id] = state;
   store.set('fold', options.fold);
+  refreshTable(id);
+}
+
+function setTurned(id, turned) {
+  options.turned[id] = turned;
+  store.set('turned', options.turned);
+  refreshTable(id);
+}
+
+function refreshTable(id) {
   room.rebuildPiece(id);
   renderDrawings();
   renderFoldPanel();
   snapshotsStale = true;
 }
 
-// Fold buttons can be on any card; redraw that card in the new state.
+// Fold and turn buttons can be on any card; redraw that card in the new state.
 document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-fold-id]');
+  const btn = e.target.closest('[data-fold-id], [data-turn-id]');
   if (!btn) return;
+  const id = btn.dataset.foldId || btn.dataset.turnId;
   const host = btn.closest('#piece-info, #plan-info');
-  setFold(btn.dataset.foldId, btn.dataset.foldState);
-  if (host) host.innerHTML = pieceHtml(resolve(PIECES.find(p => p.id === btn.dataset.foldId)));
+  if (btn.dataset.turnId) setTurned(id, !options.turned[id]);
+  else setFold(id, btn.dataset.foldState);
+  if (host) host.innerHTML = pieceHtml(resolve(PIECES.find(p => p.id === id)));
 });
 
 function setPlan(plan) {
@@ -430,6 +468,13 @@ for (const [id, state] of Object.entries(savedFold)) {
   const p = PIECES.find(x => x.id === id);
   if (p && p.fold && FOLD_STATES[p.fold].some(([v]) => v === state)) {
     options.fold[id] = state;
+    room.rebuildPiece(id);
+  }
+}
+for (const [id, turned] of Object.entries(store.get('turned', {}))) {
+  const p = PIECES.find(x => x.id === id);
+  if (p && p.turnable && turned) {
+    options.turned[id] = true;
     room.rebuildPiece(id);
   }
 }

@@ -49,7 +49,8 @@ Switch between them at the top of the page:
   once the door swings are kept clear.
 
 The NORDEN gateleg table (both options) and the BILLY foldable table (Option 2)
-can be folded and unfolded from their cards or the panel beside the 3D view.
+can be folded and unfolded from their cards or the panel beside the 3D view,
+and the NORDEN can be turned 90° about its centre.
 Option 2 has a single chair, the LÅNGFJÄLL at the BILLY table.
 
 Check that every piece in both layouts fits the walls, window and door swings

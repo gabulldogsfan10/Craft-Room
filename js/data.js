@@ -201,7 +201,7 @@ export const PIECES = [
   // Centre
   { id: 'rug', p: 'lohals', kind: 'rug', x0: 62, z0: 50, x1: 222, z1: 280, y0: 0, y1: 0.8 },
   // One leaf raised (35″ long); the drawer section sits at the east end.
-  { id: 'norden', only: 'a', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'one', midX0: 158, midX1: 184, x0: 95, z0: 110, x1: 184, z1: 190, y0: 0, y1: 74 },
+  { id: 'norden', only: 'a', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'one', turnable: true, cx: 171, cz: 150, x0: 95, z0: 110, x1: 184, z1: 190, y0: 0, y1: 74 },
   { id: 'chair-1', only: 'a', p: 'teodores', kind: 'chair', x0: 117, z0: 196, x1: 160, z1: 240, y0: 0, y1: 80, face: 'n' },
   { id: 'chair-2', only: 'a', p: 'teodores', kind: 'chair', x0: 51, z0: 128, x1: 93, z1: 172, y0: 0, y1: 80, face: 'e' },
   { id: 'raskog', p: 'raskog', kind: 'cart', x0: 190, z0: 250, x1: 225, z1: 295, y0: 0, y1: 78 },
@@ -248,7 +248,7 @@ export const PIECES = [
 
   // Centre: NORDEN starts folded down to 10¼″ so the desks and BILLY table
   // have room; raise its leaves for cutting fabric.
-  { id: 'b-norden', only: 'b', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'folded', midX0: 110, midX1: 136, x0: 110, z0: 120, x1: 136, z1: 200, y0: 0, y1: 74 },
+  { id: 'b-norden', only: 'b', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'folded', turnable: true, cx: 123, cz: 160, x0: 110, z0: 120, x1: 136, z1: 200, y0: 0, y1: 74 },
 ];
 
 // Camera presets that match where each photo was taken from.
@@ -278,7 +278,7 @@ export const PLANS = {
   a: { name: 'Option 1 · Starter plan' },
   b: { name: 'Option 2 · Your KALLAX design' },
 };
-export const options = { plan: 'a', fold: {} };
+export const options = { plan: 'a', fold: {}, turned: {} };
 
 // Folding tables. A piece with `fold` can be switched between these states;
 // `foldDefault` is where it starts. A piece with `whenOpen` (the machine on
@@ -288,16 +288,30 @@ export const FOLD_STATES = {
   billy: [['folded', 'Folded up'], ['open', 'Table out']],
 };
 const NORDEN_LEAF = 63; // each leaf adds 24¾″
+const NORDEN_MID = 26; // 10¼″ drawer section
+const NORDEN_WIDTH = 80; // 31½″ across the leaves
 const pieceById = id => PIECES.find(p => p.id === id);
 export const foldState = p => options.fold[p.id] ?? p.foldDefault;
+// A `turnable` piece can be turned 90° about its centre (cx, cz).
+export const isTurned = p => Boolean(p.turnable && options.turned[p.id]);
 
 // The piece with its footprint for the current fold state.
 export function resolve(p) {
   if (!p.fold) return p;
   const state = foldState(p);
   if (p.fold === 'norden') {
+    // Laid out with the leaves along x, relative to the centre; turned, the
+    // same table is rotated 90° so the leaves run along z.
     const leaves = { w: state !== 'folded', e: state === 'both' };
-    return { ...p, foldState: state, leaves, x0: p.midX0 - (leaves.w ? NORDEN_LEAF : 0), x1: p.midX1 + (leaves.e ? NORDEN_LEAF : 0) };
+    const local = {
+      x0: -NORDEN_MID / 2 - (leaves.w ? NORDEN_LEAF : 0), x1: NORDEN_MID / 2 + (leaves.e ? NORDEN_LEAF : 0),
+      z0: -NORDEN_WIDTH / 2, z1: NORDEN_WIDTH / 2, midX0: -NORDEN_MID / 2, midX1: NORDEN_MID / 2,
+    };
+    const turned = isTurned(p);
+    const extent = turned
+      ? { x0: p.cx + local.z0, x1: p.cx + local.z1, z0: p.cz - local.x1, z1: p.cz - local.x0 }
+      : { x0: p.cx + local.x0, x1: p.cx + local.x1, z0: p.cz + local.z0, z1: p.cz + local.z1 };
+    return { ...p, ...extent, foldState: state, turned, leaves, local };
   }
   const open = state === 'open';
   const c = { ...p, foldState: state, tableOpen: open };

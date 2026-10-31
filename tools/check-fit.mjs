@@ -4,8 +4,8 @@
 // swing, tall pieces that cover window glass, machines that hang off their
 // table, and shopping-list quantities that don't match what the pieces use.
 // Exits 1 on any problem.
-// Folding tables are checked as they start; each other fold position is
-// listed with what it would bump into, as a note.
+// Folding tables are checked as they start; each other fold position (and
+// the NORDEN turned 90°) is listed with what it would bump into, as a note.
 import { ROOM, PLANS, FOLD_STATES, options, activePieces, activeProducts, accessoriesOf } from '../js/data.js';
 import { feetInches } from '../js/drawings.js';
 
@@ -93,18 +93,22 @@ for (const plan of Object.keys(PLANS)) {
     const n = used.get(prod.key) || 0;
     if (n && n !== prod.qty) out.push(`${prod.name} (${prod.key}): the list says ${prod.qty}, the pieces use ${n}`);
   }
-  // other fold positions of each folding table
+  // other fold positions (and, for the NORDEN, turned 90°) of each table
   const notes = [];
   for (const table of pieces.filter(p => p.fold)) {
-    for (const [state, label] of FOLD_STATES[table.fold]) {
-      if (state === table.foldState) continue;
-      options.fold = { [table.id]: state };
-      const now = activePieces();
-      const t = now.find(p => p.id === table.id);
-      const hits = now.filter(o => o !== t && !RIDERS.has(o.kind) && boxesOverlap(t, o)).map(name);
-      for (const [door, cx, cz, r, dir] of SWINGS) if (inSwing(t, cx, cz, r, dir)) hits.push(`the ${door}'s swing`);
-      notes.push(`${t.p} "${label}": ${hits.length ? `move ${hits.join(', ')} first` : 'fits as is'}`);
-      options.fold = {};
+    for (const turned of table.turnable ? [false, true] : [false]) {
+      for (const [state, label] of FOLD_STATES[table.fold]) {
+        if (state === table.foldState && !turned) continue;
+        options.fold = { [table.id]: state };
+        options.turned = { [table.id]: turned };
+        const now = activePieces();
+        const t = now.find(p => p.id === table.id);
+        const hits = now.filter(o => o !== t && !RIDERS.has(o.kind) && boxesOverlap(t, o)).map(name);
+        for (const [door, cx, cz, r, dir] of SWINGS) if (inSwing(t, cx, cz, r, dir)) hits.push(`the ${door}'s swing`);
+        notes.push(`${t.p} "${label}"${turned ? ' turned 90°' : ''}: ${hits.length ? `move ${hits.join(', ')} first` : 'fits as is'}`);
+        options.fold = {};
+        options.turned = {};
+      }
     }
   }
   console.log(`${PLANS[plan].name}: ${pieces.length} pieces – ${out.length ? `${out.length} problem(s)` : 'everything fits'}`);

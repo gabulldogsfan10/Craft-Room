@@ -561,6 +561,15 @@ export const BUILDERS = {
   // NORDEN gateleg table: the 10¼″ drawer section (midX0..midX1) with a
   // 24¾″ leaf on each side, raised or hanging down per `leaves`.
   norden(p, g) {
+    if (p.local) {
+      // build around the centre with the leaves along x, then turn it into place
+      const sub = new THREE.Group();
+      BUILDERS.norden({ ...p, ...p.local, local: null }, sub);
+      sub.position.set(p.cx, 0, p.cz);
+      if (p.turned) sub.rotation.y = Math.PI / 2;
+      g.add(sub);
+      return;
+    }
     const W = white();
     const top = 74;
     const mid0 = p.midX0 ?? p.x1 - 26;
