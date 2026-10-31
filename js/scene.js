@@ -1,12 +1,12 @@
 // Three.js model of the room and the proposed IKEA furniture.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ROOM, PIECES } from './data.js';
+import { ROOM, PIECES, isActive, resolve } from './data.js';
 
 const R = ROOM.size;
 const H = ROOM.height;
 
-const COLORS = {
+export const COLORS = {
   white: '#f2f0eb',
   trim: '#f6f5f1',
   wood: '#c9a77c',
@@ -19,7 +19,7 @@ const COLORS = {
 // ---------------------------------------------------------------- helpers
 
 const matCache = new Map();
-function mat(color, opts = {}) {
+export function mat(color, opts = {}) {
   const key = color + JSON.stringify(opts);
   if (!matCache.has(key)) {
     matCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0, ...opts }));
@@ -27,7 +27,7 @@ function mat(color, opts = {}) {
   return matCache.get(key);
 }
 
-function box(x0, y0, z0, x1, y1, z1, material) {
+export function box(x0, y0, z0, x1, y1, z1, material) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), material);
   m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
   m.castShadow = true;
@@ -35,7 +35,7 @@ function box(x0, y0, z0, x1, y1, z1, material) {
   return m;
 }
 
-function cyl(x, y0, z, r, h, material, seg = 16) {
+export function cyl(x, y0, z, r, h, material, seg = 16) {
   const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), material);
   m.position.set(x, y0 + h / 2, z);
   m.castShadow = true;
@@ -283,7 +283,7 @@ function buildShell(wallMat) {
 
 const white = () => mat(COLORS.white);
 
-const BUILDERS = {
+export const BUILDERS = {
   besta(p, g) {
     g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1 - 1.6, white()));
     const w = (p.x1 - p.x0) / 2;
@@ -314,22 +314,29 @@ const BUILDERS = {
   },
 
   rod(p, g) {
-    g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, mat(COLORS.grey, { metalness: 0.5 })));
+    g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, mat(COLORS.trim)));
   },
 
+  // HEKTAR floor lamp with 3 spotlights
   floorlamp(p, g) {
     const cx = (p.x0 + p.x1) / 2;
     const cz = (p.z0 + p.z1) / 2;
     const m = mat(COLORS.grey, { metalness: 0.4, roughness: 0.5 });
     g.add(cyl(cx, 0, cz, 14, 2, m, 24));
-    g.add(cyl(cx, 2, cz, 1.2, p.y1 - 25, m));
-    const shade = new THREE.Mesh(new THREE.CylinderGeometry(8, 16, 22, 24, 1, true), mat(COLORS.grey, { side: THREE.DoubleSide, metalness: 0.4 }));
-    shade.position.set(cx - 10, p.y1 - 12, cz + 10);
-    shade.rotation.set(0.5, 0, 0.5);
-    g.add(shade);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(5, 12, 8), new THREE.MeshBasicMaterial({ color: '#fff3d6' }));
-    bulb.position.set(cx - 14, p.y1 - 18, cz + 14);
-    g.add(bulb);
+    g.add(cyl(cx, 2, cz, 1.2, p.y1 - 4, m));
+    const spots = [[p.y1 - 6, 0.6, -0.5], [p.y1 - 34, -0.5, 0.4], [p.y1 - 62, 0.4, 0.9]];
+    for (const [y, rx, ry] of spots) {
+      const arm = new THREE.Group();
+      arm.position.set(cx, y, cz);
+      arm.rotation.set(rx, ry, 0);
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 6.5, 12, 20, 1, true), mat(COLORS.grey, { side: THREE.DoubleSide, metalness: 0.4 }));
+      shade.position.set(0, -2, 8);
+      shade.rotation.x = Math.PI / 2.4;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(2.6, 10, 8), new THREE.MeshBasicMaterial({ color: '#fff3d6' }));
+      bulb.position.set(0, -4, 11);
+      arm.add(shade, bulb, box(-0.6, -0.6, 0, 0.6, 0.6, 6, m));
+      g.add(arm);
+    }
   },
 
   alex(p, g) {
@@ -357,10 +364,10 @@ const BUILDERS = {
     g.add(box(p.x0, p.y0, p.z0, p.x1, p.y1, p.z1, tex));
     const f = frontFrame(p, p.face);
     const hoopMat = mat('#e9dfcf', { roughness: 0.5 });
-    const isMachine = p.id.startsWith('skadis-') && p.face === 'w';
+    const isMachine = Boolean(p.hoops);
     if (isMachine) {
       // embroidery hoops hanging on hooks
-      const sizes = p.id === 'skadis-1' ? [[18, 12], [13, 9]] : [[22, 15], [10, 10]];
+      const sizes = p.hoops === 1 ? [[18, 12], [13, 9]] : [[22, 15], [10, 10]];
       sizes.forEach(([w, h], i) => {
         const a = 14 + i * 36 + w / 2;
         const [x, z] = f.at(a, 3);
@@ -428,30 +435,32 @@ const BUILDERS = {
     g.add(box(p.x0 + d * 0.25, p.y0 + 10, p.z1 - 12, p.x1 - d * 0.1, p.y1, p.z1, m));
     g.add(box(p.x0 + d * 0.25, p.y1 - 9, p.z0 + 2, p.x1 - d * 0.1, p.y1, p.z1, m));
     g.add(box(p.x0 + d * 0.24, p.y1 - 18, p.z1 - 11, p.x0 + d * 0.25, p.y1 - 10, p.z1 - 3, accent));
-    if (p.id === 'machine-1') {
-      // embroidery unit + hoop on the bed
-      g.add(box(p.x0 - 8, p.y0, p.z0 - 22, p.x1 - 4, p.y0 + 8, p.z0 + 4, m));
-      g.add(box(p.x0 - 2, p.y0 + 10, p.z0 - 16, p.x0 + 26, p.y0 + 11.5, p.z0 + 10, mat('#e9dfcf')));
+    if (p.embroidery) {
+      // embroidery unit on the left of the machine, with the 5″ × 7″ hoop
+      g.add(box(p.x0 - 10, p.y0, p.z0 - 24, p.x1, p.y0 + 9, p.z0 + 6, m));
+      g.add(box(p.x0 - 6, p.y0 + 9, p.z0 - 14, p.x0 + 20, p.y0 + 10.5, p.z0 + 6, mat('#e9dfcf')));
+      g.add(box(p.x0 - 4, p.y0 + 10.5, p.z0 - 12, p.x0 + 18, p.y0 + 10.8, p.z0 + 4, mat('#f7f3ea')));
     }
   },
 
   officechair(p, g) {
     const cx = (p.x0 + p.x1) / 2;
     const cz = (p.z0 + p.z1) / 2;
-    const fabric = mat('#4b4f57', { roughness: 0.9 });
-    const black = mat('#1f1f22');
+    // LÅNGFJÄLL in Gunnared beige with a white base
+    const fabric = mat('#cfc4b2', { roughness: 0.9 });
+    const base = mat('#f0efeb', { roughness: 0.4 });
     for (let i = 0; i < 5; i++) {
       const a = (i / 5) * Math.PI * 2;
-      const leg = box(-1.5, 0, 0, 1.5, 3, 30, black);
+      const leg = box(-1.5, 0, 0, 1.5, 3, 30, base);
       leg.position.set(cx + Math.sin(a) * 14, 6, cz + Math.cos(a) * 14);
       leg.rotation.y = a;
       g.add(leg);
     }
-    g.add(cyl(cx, 6, cz, 2.5, 38, black));
+    g.add(cyl(cx, 6, cz, 2.5, 38, base));
     g.add(box(cx - 24, 44, cz - 24, cx + 24, 51, cz + 24, fabric));
     // back on the side away from the desk (desk is east)
     g.add(box(cx - 26, 52, cz - 22, cx - 22, p.y1, cz + 22, fabric));
-    for (const s of [-1, 1]) g.add(box(cx - 18, 62, cz + s * 25 - 2, cx + 14, 64, cz + s * 25 + 2, black));
+    for (const s of [-1, 1]) g.add(box(cx - 18, 62, cz + s * 25 - 2, cx + 14, 64, cz + s * 25 + 2, base));
   },
 
   kallax(p, g) {
@@ -549,29 +558,54 @@ const BUILDERS = {
     g.add(m);
   },
 
+  // NORDEN gateleg table: the 10¼″ drawer section (midX0..midX1) with a
+  // 24¾″ leaf on each side, raised or hanging down per `leaves`.
   norden(p, g) {
+    if (p.local) {
+      // build around the centre with the leaves along x, then turn it into place
+      const sub = new THREE.Group();
+      BUILDERS.norden({ ...p, ...p.local, local: null }, sub);
+      sub.position.set(p.cx, 0, p.cz);
+      if (p.turned) sub.rotation.y = Math.PI / 2;
+      g.add(sub);
+      return;
+    }
     const W = white();
     const top = 74;
-    // drawer section (26 cm) at the east end, one 63 cm leaf raised to the west
-    const mx0 = p.x1 - 26;
-    g.add(box(mx0, 0, p.z0 + 2, p.x1, top - 3, p.z1 - 2, W));
+    const mid0 = p.midX0 ?? p.x1 - 26;
+    const mid1 = p.midX1 ?? p.x1;
+    const leaves = p.leaves ?? { w: mid0 - p.x0 > 1, e: p.x1 - mid1 > 1 };
+    const leaf = 63;
+    g.add(box(mid0 + 1, 0, p.z0 + 2, mid1 - 1, top - 3, p.z1 - 2, W));
     for (let i = 0; i < 3; i++) {
       const y0 = 8 + i * 20;
-      g.add(box(mx0 + 1, y0, p.z1 - 2, p.x1 - 1, y0 + 18, p.z1 - 1, W));
-      g.add(box(mx0 + 1, y0, p.z0 + 1, p.x1 - 1, y0 + 18, p.z0 + 2, W));
+      g.add(box(mid0 + 2, y0, p.z1 - 2, mid1 - 2, y0 + 18, p.z1 - 1, W), box(mid0 + 2, y0, p.z0 + 1, mid1 - 2, y0 + 18, p.z0 + 2, W));
     }
-    g.add(box(p.x0, top - 3, p.z0, p.x1, top, p.z1, W));
-    // gateleg
-    g.add(box(p.x0 + 6, 0, p.z0 + 4, p.x0 + 10, top - 3, p.z0 + 8, W));
-    g.add(box(p.x0 + 6, 0, p.z1 - 8, p.x0 + 10, top - 3, p.z1 - 4, W));
-    g.add(box(p.x0 + 6, 6, p.z0 + 8, p.x0 + 10, 10, p.z1 - 8, W));
-    // a beading tray + cutting mat on top
-    g.add(box(p.x0 + 10, top, p.z0 + 10, p.x0 + 55, top + 0.3, p.z0 + 45, mat('#3f7d5a')));
-    g.add(box(p.x0 + 20, top, p.z0 + 52, p.x0 + 50, top + 1.5, p.z0 + 72, mat('#e6e1d8')));
-    for (let i = 0; i < 14; i++) {
-      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 5), mat(new THREE.Color().setHSL(rand(), 0.7, 0.55).getStyle()));
-      bead.position.set(p.x0 + 22 + rand() * 26, top + 2, p.z0 + 54 + rand() * 16);
-      g.add(bead);
+    g.add(box(mid0, top - 3, p.z0, mid1, top, p.z1, W));
+    for (const side of ['w', 'e']) {
+      const [a, b] = side === 'w' ? [mid0 - leaf, mid0] : [mid1, mid1 + leaf];
+      if (leaves[side]) {
+        g.add(box(a, top - 3, p.z0, b, top, p.z1, W));
+        // gateleg swung out under the far edge
+        const lx = side === 'w' ? a + 6 : b - 10;
+        g.add(box(lx, 0, p.z0 + 4, lx + 4, top - 3, p.z0 + 8, W), box(lx, 0, p.z1 - 8, lx + 4, top - 3, p.z1 - 4, W));
+        g.add(box(lx, 6, p.z0 + 8, lx + 4, 10, p.z1 - 8, W));
+      } else {
+        // leaf hanging down beside the drawer section
+        const hx = side === 'w' ? mid0 - 2 : mid1;
+        g.add(box(hx, 12, p.z0, hx + 2, top - 3, p.z1, W));
+      }
+    }
+    // a cutting mat and bead board on the first raised leaf
+    const work = leaves.w ? mid0 - leaf : leaves.e ? mid1 : null;
+    if (work !== null) {
+      g.add(box(work + 6, top, p.z0 + 10, work + 51, top + 0.3, p.z0 + 45, mat('#3f7d5a')));
+      g.add(box(work + 16, top, p.z0 + 52, work + 46, top + 1.5, p.z0 + 72, mat('#e6e1d8')));
+      for (let i = 0; i < 14; i++) {
+        const bead = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 5), mat(new THREE.Color().setHSL(rand(), 0.7, 0.55).getStyle()));
+        bead.position.set(work + 18 + rand() * 26, top + 2, p.z0 + 54 + rand() * 16);
+        g.add(bead);
+      }
     }
   },
 
@@ -582,8 +616,204 @@ const BUILDERS = {
     const s = 21;
     for (const dx of [-1, 1]) for (const dz of [-1, 1]) g.add(box(cx + dx * s - 1.5, 0, cz + dz * s - 1.5, cx + dx * s + 1.5, 45, cz + dz * s + 1.5, W));
     g.add(box(cx - s - 1.5, 45, cz - s - 1.5, cx + s + 1.5, 48, cz + s + 1.5, W));
-    const back = { n: [cx - s, cz + s - 2, cx + s, cz + s + 1.5], e: [cx - s - 1.5, cz - s, cx - s + 2, cz + s] }[p.face];
+    const back = {
+      n: [cx - s, cz + s - 2, cx + s, cz + s + 1.5],
+      s: [cx - s, cz - s - 1.5, cx + s, cz - s + 2],
+      e: [cx - s - 1.5, cz - s, cx - s + 2, cz + s],
+      w: [cx + s - 2, cz - s, cx + s + 1.5, cz + s],
+    }[p.face];
     g.add(box(back[0], 48, back[1], back[2], p.y1, back[3], W));
+  },
+
+  // Any KALLAX shelf unit: `cols`×`rows` cubes opening toward `face`, with
+  // `cells[row][col]` (bottom row first) naming each cube's insert or contents.
+  kallaxGrid(p, g) {
+    const f = frontFrame(p, p.face);
+    const D = f.horiz ? p.z1 - p.z0 : p.x1 - p.x0;
+    const t = 3.6;
+    const cw = (f.len - (p.cols + 1) * t) / p.cols;
+    const ch = (p.y1 - p.y0 - (p.rows + 1) * t) / p.rows;
+    // a box given by a span across the front (a), height (y) and depth (d ≤ 0 is inside)
+    const part = (a0, a1, y0, y1, d0, d1, m) => {
+      const [xa, za] = f.at(a0, d0);
+      const [xb, zb] = f.at(a1, d1);
+      return box(Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), m);
+    };
+    const W = white();
+    g.add(part(0, f.len, p.y0, p.y1, -D, -D + 0.6, W));
+    g.add(part(0, f.len, p.y0, p.y0 + t, -D, 0, W), part(0, f.len, p.y1 - t, p.y1, -D, 0, W));
+    for (let i = 0; i <= p.cols; i++) g.add(part(i * (cw + t), i * (cw + t) + t, p.y0, p.y1, -D, 0, W));
+    for (let i = 1; i < p.rows; i++) {
+      const y = p.y0 + i * (ch + t);
+      g.add(part(0, f.len, y, y + t, -D, 0, W));
+    }
+    const blue = mat('#a9bccb', { roughness: 0.6 });
+    const knob = (a, y, d) => {
+      const [x, z] = f.at(a, d);
+      const k = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), mat('#1d1d1f'));
+      k.position.set(x, y, z);
+      g.add(k);
+    };
+    p.cells.forEach((row, r) => row.forEach((type, c) => {
+      const a0 = t + c * (cw + t);
+      const a1 = a0 + cw;
+      const y0 = p.y0 + t + r * (ch + t);
+      const y1 = y0 + ch;
+      const mid = (a0 + a1) / 2;
+      if (type === 'drona') {
+        g.add(part(a0 + 0.5, a1 - 0.5, y0, y1 - 0.6, -36, -1, mat('#f2f0eb', { roughness: 0.95 })));
+        g.add(part(mid - 4, mid + 4, y1 - 9, y1 - 6, -0.95, -0.9, mat('#b9b2a6')));
+      } else if (type === 'kuggis') {
+        g.add(part(a0 + 1, a1 - 1, y0, y1 - 2.5, -D + 3, -1, mat('#f4f4f2', { transparent: true, opacity: 0.88, roughness: 0.3 })));
+        g.add(part(a0 + 0.7, a1 - 0.7, y1 - 2.5, y1 - 1.3, -D + 2.7, -0.7, mat('#ffffff')));
+      } else if (type === 'files') {
+        for (let i = 0; i < 4; i++) g.add(part(a0 + 1 + i * 8, a0 + 8.5 + i * 8, y0, y0 + 31, -26, -3, mat(i % 2 ? '#ffffff' : '#f1efea')));
+      } else if (type === 'books') {
+        let a = a0 + 1;
+        while (a < a1 - 4) {
+          const bw = 2 + rand() * 3;
+          const col = new THREE.Color().setHSL(rand(), 0.3, 0.35 + rand() * 0.3);
+          g.add(part(a, a + bw, y0, y0 + 20 + rand() * 9, -24, -4, mat('#' + col.getHexString())));
+          a += bw + 0.4;
+        }
+      } else if (type === 'shelf1' || type === 'shelf4') {
+        const n = type === 'shelf1' ? 1 : 3;
+        for (let i = 1; i <= n; i++) {
+          const y = y0 + (ch * i) / (n + 1);
+          g.add(part(a0, a1, y - 0.6, y + 0.6, -D + 1, -1, W));
+          // a stack of paper / fabric on each level
+          const col = new THREE.Color().setHSL(rand(), 0.35, 0.7);
+          g.add(part(a0 + 3, a1 - 3, y + 0.6, y + 0.6 + (type === 'shelf1' ? 8 : 3), -D + 6, -6, mat('#' + col.getHexString())));
+        }
+        if (type === 'shelf4') {
+          const col = new THREE.Color().setHSL(rand(), 0.35, 0.7);
+          g.add(part(a0 + 3, a1 - 3, y0, y0 + 3, -D + 6, -6, mat('#' + col.getHexString())));
+        }
+      } else if (type === 'bottles') {
+        // diagonal cubbies, each holding a rolled-up length of fabric
+        const [cx, cz] = f.at(mid, -D / 2);
+        const cy = (y0 + y1) / 2;
+        for (const s of [1, -1]) {
+          const geo = f.horiz
+            ? new THREE.BoxGeometry(Math.hypot(cw, ch), 1.2, D - 2)
+            : new THREE.BoxGeometry(D - 2, 1.2, Math.hypot(cw, ch));
+          const m = new THREE.Mesh(geo, W);
+          m.position.set(cx, cy, cz);
+          if (f.horiz) m.rotation.z = (s * Math.PI) / 4;
+          else m.rotation.x = (s * Math.PI) / 4;
+          g.add(m);
+        }
+        const q = cw / 4;
+        [[mid, y0 + q], [mid, y1 - q], [a0 + q, cy], [a1 - q, cy]].forEach(([a, y]) => {
+          const [x, z] = f.at(a, -D / 2);
+          const roll = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, D - 6, 14), mat(new THREE.Color().setHSL(rand(), 0.45, 0.6).getStyle()));
+          roll.position.set(x, y, z);
+          if (f.horiz) roll.rotation.x = Math.PI / 2;
+          else roll.rotation.z = Math.PI / 2;
+          g.add(roll);
+        });
+      } else if (type === 'drawers') {
+        for (let i = 0; i < 2; i++) {
+          const ya = y0 + (ch / 2) * i;
+          g.add(part(a0 + 0.3, a1 - 0.3, ya + 0.3, ya + ch / 2 - 0.3, -1.6, 0, blue));
+          knob(mid, ya + ch / 4, 0.8);
+        }
+      } else if (type === 'door' || type === 'lock') {
+        g.add(part(a0 + 0.3, a1 - 0.3, y0 + 0.3, y1 - 0.3, -1.6, 0, type === 'lock' ? W : blue));
+        knob(a1 - 4, (y0 + y1) / 2, 0.8);
+        if (type === 'lock') {
+          const [x, z] = f.at(a1 - 4, 0.3);
+          const lock = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 1, 12), mat(COLORS.steel, { metalness: 0.7 }));
+          lock.position.set(x, (y0 + y1) / 2 + 5, z);
+          lock.rotation.x = Math.PI / 2;
+          g.add(lock);
+        }
+      }
+    }));
+  },
+
+  // KALLAX desk: a 1×2 cube section at one end (inserts bottom-up), a panel
+  // leg at the other, and the top across both.
+  kdesk(p, g) {
+    const f = frontFrame(p, p.face);
+    const D = f.horiz ? p.z1 - p.z0 : p.x1 - p.x0;
+    const t = 3.6;
+    const part = (a0, a1, y0, y1, d0, d1, m) => {
+      const [xa, za] = f.at(a0, d0);
+      const [xb, zb] = f.at(a1, d1);
+      return box(Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), m);
+    };
+    const W = white();
+    const topY = p.y1 - t;
+    g.add(part(0, f.len, topY, p.y1, -D, 0, W));
+    const cubeW = 41.3;
+    g.add(part(0, t, p.y0, topY, -D, 0, W), part(cubeW - t, cubeW, p.y0, topY, -D, 0, W));
+    g.add(part(0, cubeW, p.y0, p.y0 + 3, -D, 0, W), part(0, cubeW, p.y0, topY, -D, -D + 0.6, W));
+    const ch = (topY - p.y0 - 3 - t) / 2;
+    g.add(part(0, cubeW, p.y0 + 3 + ch, p.y0 + 3 + ch + t, -D, 0, W));
+    g.add(part(f.len - t, f.len, p.y0, topY, -D, 0, W));
+    const blue = mat('#a9bccb', { roughness: 0.6 });
+    (p.inserts || []).forEach((type, i) => {
+      const y0 = p.y0 + 3 + i * (ch + t);
+      const n = type === 'drawers' ? 2 : 1;
+      for (let k = 0; k < n; k++) {
+        const ya = y0 + (ch / n) * k;
+        g.add(part(t + 0.3, cubeW - t - 0.3, ya + 0.3, ya + ch / n - 0.3, -1.6, 0, blue));
+        const [x, z] = f.at(type === 'drawers' ? cubeW / 2 : cubeW - t - 4, 0.8);
+        const kn = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), mat('#1d1d1f'));
+        kn.position.set(x, ya + ch / n / 2, z);
+        g.add(kn);
+      }
+    });
+  },
+
+  // BILLY bookcase with its table folded out; x0..x1 (or z) includes the
+  // open table, `caseDepth` is the bookcase itself.
+  billyfold(p, g) {
+    const c = { ...p };
+    if (p.face === 'w') c.x0 = p.x1 - p.caseDepth;
+    else if (p.face === 'e') c.x1 = p.x0 + p.caseDepth;
+    else if (p.face === 'n') c.z0 = p.z1 - p.caseDepth;
+    else c.z1 = p.z0 + p.caseDepth;
+    const f = frontFrame(c, p.face);
+    const D = p.caseDepth;
+    const t = 1.6;
+    const part = (a0, a1, y0, y1, d0, d1, m) => {
+      const [xa, za] = f.at(a0, d0);
+      const [xb, zb] = f.at(a1, d1);
+      return box(Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), m);
+    };
+    const W = white();
+    g.add(part(0, f.len, p.y0, p.y1, -D, -D + 0.6, W));
+    g.add(part(0, t, p.y0, p.y1, -D, 0, W), part(f.len - t, f.len, p.y0, p.y1, -D, 0, W));
+    g.add(part(0, f.len, p.y1 - t, p.y1, -D, 0, W), part(0, f.len, p.y0, p.y0 + 6, -D, 0, W));
+    for (const y of [36, 66]) {
+      g.add(part(t, f.len - t, y, y + t, -D, 0, W));
+      // thread boxes and stabilizer on the shelves
+      const col = new THREE.Color().setHSL(rand(), 0.4, 0.65);
+      g.add(part(t + 2, f.len / 2 - 1, y + t, y + t + 14, -D + 4, -3, mat('#' + col.getHexString())));
+      g.add(part(f.len / 2 + 1, f.len - t - 2, y + t, y + t + 18, -D + 4, -3, mat('#f4f4f2', { transparent: true, opacity: 0.85 })));
+    }
+    if (p.tableOpen === false) {
+      // table folded up flat against the front of the bookcase
+      g.add(part(0.5, f.len - 0.5, p.y1 - 80, p.y1 - 1, 0, 2, W));
+      g.add(part(f.len / 2 - 6, f.len / 2 + 6, p.y1 - 12, p.y1 - 10, 2, 3, mat('#c9c6bf')));
+      return;
+    }
+    // folded-out table and its leg
+    const reach = (f.horiz ? p.z1 - p.z0 : p.x1 - p.x0) - D;
+    g.add(part(0, f.len, p.tableY - 2, p.tableY, 0, reach, W));
+    g.add(part(4, f.len - 4, p.tableY - 8, p.tableY - 2, reach - 4, reach - 2, W));
+    g.add(part(f.len / 2 - 2, f.len / 2 + 2, p.y0, p.tableY - 2, reach - 6, reach - 2, W));
+    g.add(part(f.len / 2 - 14, f.len / 2 + 14, p.y0, p.y0 + 2, reach - 8, reach, W));
+  },
+
+  // Cellular blind inside the window, pulled about halfway down.
+  blind(p, g) {
+    const drop = (p.y1 - p.y0) * 0.45;
+    g.add(box(p.x0, p.y1 - 3, p.z0, p.x1, p.y1, p.z1 + 1, mat('#ffffff')));
+    g.add(box(p.x0 + 0.5, p.y1 - 3 - drop, p.z0, p.x1 - 0.5, p.y1 - 3, p.z1, mat('#f6f3ec', { transparent: true, opacity: 0.92, roughness: 1 })));
+    g.add(box(p.x0, p.y1 - 4 - drop, p.z0, p.x1, p.y1 - 3 - drop, p.z1 + 1, mat('#ffffff')));
   },
 
   cart(p, g) {
@@ -626,12 +856,30 @@ export function createRoom(canvas, { onSelect } = {}) {
 
   const pieces = new THREE.Group();
   const groups = new Map();
-  for (const p of PIECES) {
+  // Each piece is built in its current fold state (see resolve in data.js).
+  function buildPiece(raw) {
+    const p = resolve(raw);
     const g = new THREE.Group();
     g.userData.piece = p;
     BUILDERS[p.kind](p, g);
+    g.visible = isActive(raw);
+    return g;
+  }
+  for (const raw of PIECES) {
+    const g = buildPiece(raw);
     pieces.add(g);
-    groups.set(p.id, g);
+    groups.set(raw.id, g);
+  }
+
+  // Show the pieces of the current plan (see options.plan in data.js),
+  // minus any kinds switched off (the machines).
+  const hiddenKinds = new Set();
+  function refreshActive() {
+    for (const g of groups.values()) {
+      const p = g.userData.piece;
+      g.visible = isActive(p) && !hiddenKinds.has(p.kind);
+    }
+    select(null);
   }
 
   // Wall-mounted pieces, by wall, so they hide with that wall in the dollhouse view.
@@ -651,7 +899,7 @@ export function createRoom(canvas, { onSelect } = {}) {
     shell.userData.south.visible = c.z < R;
     const facing = { north: c.z > 0, east: c.x < R, south: c.z < R, west: c.x > 0 };
     for (const [wall, list] of Object.entries(mounted)) {
-      for (const g of list) g.visible = facing[wall];
+      for (const g of list) g.visible = facing[wall] && isActive(g.userData.piece);
     }
   }
   scene.add(pieces);
@@ -677,23 +925,247 @@ export function createRoom(canvas, { onSelect } = {}) {
   }
 
   const camera = new THREE.PerspectiveCamera(55, 1, 1, 5000);
+
+  // Two ways to move around:
+  //   orbit – Overview / Top: circle the room like a dollhouse (OrbitControls).
+  //   look  – photo views: stand where the photo was taken and look around,
+  //           with zoom changing the lens instead of walking into a wall.
+  let mode = 'orbit';
+  let currentView = null;
+
   const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.maxPolarAngle = Math.PI / 2 - 0.02;
+  Object.assign(controls, {
+    enableDamping: true,
+    dampingFactor: 0.12,
+    rotateSpeed: 0.9,
+    zoomSpeed: 1.4,
+    zoomToCursor: true,
+    screenSpacePanning: true,
+    minDistance: 120,
+    maxDistance: 1400,
+    maxPolarAngle: Math.PI / 2 - 0.02,
+  });
+  // Keep panning near the room so it can't be lost off-screen.
+  controls.addEventListener('change', () => {
+    const t = controls.target;
+    t.set(THREE.MathUtils.clamp(t.x, -60, R + 60), THREE.MathUtils.clamp(t.y, 0, H), THREE.MathUtils.clamp(t.z, -60, R + 60));
+  });
+
+  const look = { yaw: 0, pitch: 0, minFov: 25, maxFov: 95 };
+  function applyLook() {
+    look.pitch = THREE.MathUtils.clamp(look.pitch, -1.25, 1.25);
+    const dir = new THREE.Vector3(
+      Math.sin(look.yaw) * Math.cos(look.pitch),
+      Math.sin(look.pitch),
+      Math.cos(look.yaw) * Math.cos(look.pitch),
+    );
+    camera.lookAt(camera.position.clone().add(dir));
+  }
+  function lookAtPoint(p) {
+    const d = p.clone().sub(camera.position);
+    look.yaw = Math.atan2(d.x, d.z);
+    look.pitch = Math.atan2(d.y, Math.hypot(d.x, d.z));
+    applyLook();
+  }
+  function setFov(f) {
+    camera.fov = THREE.MathUtils.clamp(f, look.minFov, look.maxFov);
+    camera.updateProjectionMatrix();
+  }
 
   const VIEWS = {
-    overview: { pos: [R + 260, 470, R + 330], target: [R / 2, 40, R / 2], fov: 50 },
-    top: { pos: [R / 2, 720, R / 2 + 1], target: [R / 2, 0, R / 2], fov: 45 },
+    // `fit`: start as close as possible with the whole room still in view.
+    // Starts behind the closet doors (south wall), lined up with their centre,
+    // looking north across the room toward the window.
+    overview: {
+      pos: [(ROOM.closet.x0 + ROOM.closet.x1) / 2, 430, R + 420],
+      target: [(ROOM.closet.x0 + ROOM.closet.x1) / 2, 70, R / 2],
+      fov: 50,
+      fit: true,
+    },
+    top: { pos: [R / 2, 720, R / 2 + 1], target: [R / 2, 0, R / 2], fov: 45, fit: true },
   };
 
+  // Closest distance along the view's direction where every corner of the
+  // room fits inside the frame (with a small margin for the buttons).
+  const roomCorners = [];
+  for (const x of [0, R]) for (const y of [0, H]) for (const z of [0, R]) roomCorners.push(new THREE.Vector3(x, y, z));
+  function fitDistance(v) {
+    const target = new THREE.Vector3(...v.target);
+    const dir = new THREE.Vector3(...v.pos).sub(target).normalize();
+    const probe = camera.clone();
+    probe.fov = v.fov;
+    probe.aspect = camera.aspect;
+    probe.updateProjectionMatrix();
+    const fits = d => {
+      probe.position.copy(target).addScaledVector(dir, d);
+      probe.lookAt(target);
+      probe.updateMatrixWorld();
+      return roomCorners.every(c => {
+        const p = c.clone().project(probe);
+        return Math.abs(p.x) < 0.94 && p.y < 0.8 && p.y > -0.94 && p.z < 1;
+      });
+    };
+    let lo = 150;
+    let hi = 3000;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) hi = mid;
+      else lo = mid;
+    }
+    return { target, pos: target.clone().addScaledVector(dir, hi) };
+  }
+  // Re-fit when the canvas changes shape, until the person moves the camera.
+  let autoFit = true;
+
+  let tween = null;
   function setView(v) {
+    currentView = v;
+    tween = null;
     camera.fov = v.fov || 78;
-    camera.position.set(...v.pos);
-    controls.target.set(...v.target);
     camera.updateProjectionMatrix();
-    controls.update();
+    camera.position.set(...v.pos);
+    const inside = v.pos[0] > 0 && v.pos[0] < R && v.pos[2] > 0 && v.pos[2] < R && v.pos[1] < H;
+    mode = inside ? 'look' : 'orbit';
+    controls.enabled = mode === 'orbit';
+    if (mode === 'orbit') {
+      autoFit = Boolean(v.fit);
+      if (v.fit) {
+        const f = fitDistance(v);
+        camera.position.copy(f.pos);
+        controls.target.copy(f.target);
+      } else {
+        controls.target.set(...v.target);
+      }
+      controls.update();
+    } else {
+      lookAtPoint(new THREE.Vector3(...v.target));
+    }
+    canvas.dataset.mode = mode;
+    return mode;
   }
   setView(VIEWS.overview);
+
+  // Look-mode input: drag to turn, wheel or pinch to zoom.
+  const pointers = new Map();
+  let pinch = null;
+  canvas.addEventListener('pointerdown', e => {
+    if (mode !== 'look') return;
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinch = { dist: Math.hypot(a[0] - b[0], a[1] - b[1]), fov: camera.fov };
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (mode !== 'look' || !pointers.has(e.pointerId)) return;
+    const [px, py] = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 1) {
+      // Scale by the lens so turning feels the same zoomed in or out.
+      const k = (camera.fov * Math.PI) / 180 / canvas.clientHeight;
+      look.yaw += (e.clientX - px) * k;
+      look.pitch += (e.clientY - py) * k;
+      applyLook();
+    } else if (pinch) {
+      const [a, b] = [...pointers.values()];
+      setFov(pinch.fov * (pinch.dist / Math.max(Math.hypot(a[0] - b[0], a[1] - b[1]), 1)));
+    }
+  });
+  const endPointer = e => {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch = null;
+  };
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('wheel', e => {
+    if (mode !== 'look') return;
+    e.preventDefault();
+    setFov(camera.fov * Math.exp(e.deltaY * 0.0012));
+  }, { passive: false });
+
+  // Shared actions for the on-screen buttons and keyboard.
+  const spherical = new THREE.Spherical();
+  const offset = new THREE.Vector3();
+  function zoom(f) {
+    if (mode === 'look') return setFov(camera.fov * f);
+    offset.copy(camera.position).sub(controls.target);
+    offset.setLength(THREE.MathUtils.clamp(offset.length() * f, controls.minDistance, controls.maxDistance));
+    camera.position.copy(controls.target).add(offset);
+  }
+  function rotate(dYaw, dPitch) {
+    if (mode === 'look') {
+      look.yaw += dYaw;
+      look.pitch += dPitch;
+      return applyLook();
+    }
+    offset.copy(camera.position).sub(controls.target);
+    spherical.setFromVector3(offset);
+    spherical.theta += dYaw;
+    spherical.phi = THREE.MathUtils.clamp(spherical.phi - dPitch, 0.05, controls.maxPolarAngle);
+    offset.setFromSpherical(spherical);
+    camera.position.copy(controls.target).add(offset);
+  }
+
+  // Held buttons/keys apply a little every frame for smooth movement.
+  const held = { zoom: 0, yaw: 0, pitch: 0 };
+  function hold(action, dir) {
+    held[action] = dir;
+  }
+  function applyHeld() {
+    if (held.zoom || held.yaw || held.pitch) autoFit = false;
+    if (held.zoom) zoom(held.zoom > 0 ? 0.975 : 1 / 0.975);
+    if (held.yaw || held.pitch) rotate(held.yaw * 0.025, held.pitch * 0.018);
+  }
+
+  const KEYS = {
+    ArrowLeft: ['yaw', 1], ArrowRight: ['yaw', -1], ArrowUp: ['pitch', 1], ArrowDown: ['pitch', -1],
+    '+': ['zoom', 1], '=': ['zoom', 1], '-': ['zoom', -1], _: ['zoom', -1],
+  };
+  canvas.tabIndex = 0;
+  canvas.addEventListener('keydown', e => {
+    const k = KEYS[e.key];
+    if (!k) return;
+    e.preventDefault();
+    hold(...k);
+  });
+  canvas.addEventListener('keyup', e => {
+    const k = KEYS[e.key];
+    if (k) hold(k[0], 0);
+  });
+  canvas.addEventListener('blur', () => Object.keys(held).forEach(k => (held[k] = 0)));
+
+  // Double-click a piece to zoom to it.
+  function focusOn(g) {
+    autoFit = false;
+    const box = new THREE.Box3().setFromObject(g);
+    const center = box.getCenter(new THREE.Vector3());
+    if (mode === 'look') {
+      lookAtPoint(center);
+      return setFov(45);
+    }
+    const size = box.getSize(new THREE.Vector3()).length();
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    tween = {
+      t: 0,
+      fromPos: camera.position.clone(),
+      fromTarget: controls.target.clone(),
+      toTarget: center,
+      toPos: center.clone().add(dir.multiplyScalar(Math.max(size * 1.6, controls.minDistance + 30))),
+    };
+  }
+  function stepTween() {
+    if (!tween) return;
+    tween.t = Math.min(tween.t + 0.06, 1);
+    const e = 1 - Math.pow(1 - tween.t, 3);
+    camera.position.lerpVectors(tween.fromPos, tween.toPos, e);
+    controls.target.lerpVectors(tween.fromTarget, tween.toTarget, e);
+    if (tween.t === 1) tween = null;
+  }
+  controls.addEventListener('start', () => {
+    tween = null;
+    autoFit = false;
+  });
 
   // Selection outline
   let outline = null;
@@ -711,18 +1183,26 @@ export function createRoom(canvas, { onSelect } = {}) {
   }
 
   const ray = new THREE.Raycaster();
-  let down = null;
-  canvas.addEventListener('pointerdown', e => (down = [e.clientX, e.clientY]));
-  canvas.addEventListener('pointerup', e => {
-    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  function pieceAt(e) {
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     const hit = ray.intersectObjects(pieces.children, true)[0];
     let o = hit && hit.object;
     while (o && !o.userData.piece) o = o.parent;
-    const piece = o ? o.userData.piece : null;
+    return o || null;
+  }
+  let down = null;
+  canvas.addEventListener('pointerdown', e => (down = [e.clientX, e.clientY]));
+  canvas.addEventListener('pointerup', e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+    const g = pieceAt(e);
+    const piece = g ? g.userData.piece : null;
     select(piece && piece.id);
     onSelect && onSelect(piece);
+  });
+  canvas.addEventListener('dblclick', e => {
+    const g = pieceAt(e);
+    if (g) focusOn(g);
   });
 
   function resize() {
@@ -732,6 +1212,7 @@ export function createRoom(canvas, { onSelect } = {}) {
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      if (autoFit && mode === 'orbit' && currentView) setView(currentView);
     }
   }
 
@@ -739,7 +1220,9 @@ export function createRoom(canvas, { onSelect } = {}) {
   function loop() {
     if (running) {
       resize();
-      controls.update();
+      applyHeld();
+      stepTween();
+      if (mode === 'orbit') controls.update();
       updateCutaway(camera);
       renderer.render(scene, camera);
     }
@@ -772,11 +1255,25 @@ export function createRoom(canvas, { onSelect } = {}) {
   return {
     views: VIEWS,
     setView,
+    pieceGroup: id => groups.get(id),
+    hold,
+    reset: () => currentView && setView(currentView),
     select,
     snapshot,
     setWallColor: c => wallMat.color.set(c),
     setVisible(kind, on) {
-      for (const g of groups.values()) if (g.userData.piece.kind === kind) g.visible = on;
+      hiddenKinds[on ? 'delete' : 'add'](kind);
+      refreshActive();
+    },
+    refreshActive,
+    // Rebuild a piece after its fold state changes.
+    rebuildPiece(id) {
+      const old = groups.get(id);
+      const g = buildPiece(PIECES.find(p => p.id === id));
+      pieces.remove(old);
+      pieces.add(g);
+      groups.set(id, g);
+      refreshActive();
     },
     pause: v => (running = !v),
   };
