@@ -105,7 +105,7 @@ function foldButtons(piece) {
 
 function pieceHtml(piece) {
   if (!piece) return '<h3>Click any piece</h3><p>Select furniture to see a picture of the IKEA product, its size, what it stores and a link to buy it.</p>';
-  if (!piece.p) return `<h3>${esc(piece.prop)}</h3><p>Shown for scale – not part of the shopping list.</p>`;
+  if (!piece.p) return `<h3>${esc(piece.prop)}</h3><p>${esc(piece.propNote || 'Shown for scale – not part of the shopping list.')}</p>`;
   const size = `${feetInches(piece.x1 - piece.x0)} × ${feetInches(piece.z1 - piece.z0)} footprint, ${feetInches(piece.y1 - piece.y0)} tall`;
   return foldButtons(piece) + productCard(productByKey[piece.p], size, piece);
 }

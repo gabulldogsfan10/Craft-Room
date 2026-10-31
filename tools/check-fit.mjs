@@ -1,8 +1,9 @@
 // Checks that every piece in each plan fits the room:
 //   node tools/check-fit.mjs
 // Reports pieces outside the room, pieces that collide, anything in a door's
-// swing, tall pieces that cover window glass, and shopping-list quantities
-// that don't match what the pieces use. Exits 1 on any problem.
+// swing, tall pieces that cover window glass, machines that hang off their
+// table, and shopping-list quantities that don't match what the pieces use.
+// Exits 1 on any problem.
 // Folding tables are checked as they start; each other fold position is
 // listed with what it would bump into, as a note.
 import { ROOM, PLANS, FOLD_STATES, options, activePieces, activeProducts, accessoriesOf } from '../js/data.js';
@@ -63,6 +64,23 @@ for (const plan of Object.keys(PLANS)) {
       if (pair === 'alex+top') continue; // counter sits on its drawer units
       if (boxesOverlap(a, b)) out.push(`collide: ${name(a)} and ${name(b)}`);
     }
+  }
+  // machines must sit fully on a work surface at their height (embroidery
+  // unit and hoop included)
+  const surfaces = pieces.flatMap(p => {
+    if (p.kind === 'top' || p.kind === 'kdesk') return [{ ...p, y: p.y1 }];
+    if (p.kind === 'billyfold' && p.tableOpen !== false) {
+      const t = { ...p, y: p.tableY };
+      if (p.face === 'w') t.x1 = p.x1 - p.caseDepth;
+      else if (p.face === 'e') t.x0 = p.x0 + p.caseDepth;
+      return [t];
+    }
+    return [];
+  });
+  for (const m of pieces.filter(p => p.kind === 'machine')) {
+    const f = m.embroidery ? { x0: m.x0 - 10, x1: m.x1, z0: m.z0 - 24, z1: m.z1 } : m;
+    const ok = surfaces.some(s => Math.abs(s.y - m.y0) < 1.5 && f.x0 >= s.x0 - 0.5 && f.x1 <= s.x1 + 0.5 && f.z0 >= s.z0 - 0.5 && f.z1 <= s.z1 + 0.5);
+    if (!ok) out.push(`hangs off its table: ${name(m)}`);
   }
   // every placed piece and accessory adds up to the shopping-list quantity
   const used = new Map();

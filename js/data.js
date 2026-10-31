@@ -149,7 +149,7 @@ export const PRODUCTS = [
   { key: 'kallax-desk-door', only: 'b', url: 'https://www.ikea.com/us/en/p/kallax-insert-with-door-wave-shaped-light-gray-blue-60592805/', zone: 'machine', name: 'KALLAX insert with door', spec: 'wave shaped/light gray-blue, 13×13″', qty: 2, price: 20,
     why: 'From your design: the bottom cube of each desk – manuals, machine feet in their cases.' },
   { key: 'billy-fold', only: 'b', url: 'https://www.ikea.com/us/en/p/billy-bookcase-with-foldable-table-white-00579755/', zone: 'machine', name: 'BILLY bookcase with foldable table', spec: 'white, 31½×12¾″ (44¼″ deep open)×41¾″', qty: 1, price: 180,
-    why: 'The embroidery machine station: the table folds out 31½″ at 29¼″ high and holds up to 55 lb, giving the machine and hoop room to move; it folds back when you need floor space. Shelves below hold thread and stabilizer. Anchor it to the wall.' },
+    why: 'The embroidery machine station: the table folds out 31½″ at 29¼″ high and holds up to 55 lb – plenty for the 20½ lb Brother SE2000 – giving the machine and its 5″ × 7″ hoop room to move; it folds back when you need floor space. Shelves below hold thread and stabilizer. Anchor it to the wall.' },
   { key: 'skadis-76-b', only: 'b', url: 'https://www.ikea.com/us/en/p/skadis-pegboard-white-10321618/', zone: 'machine', name: 'SKÅDIS pegboard', spec: 'white, 30×22″', qty: 3, price: 25,
     why: 'Added: two above the east desk and BILLY for hoops and snips, one above the west desk for pliers and bead tools.' },
   { key: 'kallax-lock', only: 'b', url: 'https://www.ikea.com/us/en/p/kallax-insert-with-lockable-door-white-40544274/', zone: 'supply', name: 'KALLAX insert with lockable door', spec: 'white, 13×13″', qty: 1, price: 25,
@@ -159,6 +159,8 @@ export const PRODUCTS = [
   { key: 'kuggis-small-b', only: 'b', url: 'https://www.ikea.com/us/en/p/kuggis-box-with-lid-white-s99561153/', zone: 'supply', name: 'KUGGIS box with lid', spec: 'white, 5×7×3¼″', qty: 6, price: 4,
     why: 'Added: sort beads by colour and size inside the ALEX drawers. Measure drawer height before buying.' },
 ];
+
+const SE2000_NOTE = 'Sewing and embroidery machine: about 17½″ wide × 9½″ deep × 11¾″ tall on its own, 20½ lb, with a 5″ × 7″ embroidery hoop. Shown with its embroidery unit attached, which adds about 10″ on the left. Yours already – not on the shopping list.';
 
 // Things drawn in the render. `p` links a piece back to PRODUCTS.
 // Footprint is [x0, z0] -> [x1, z1]; heights are y0 -> y1.
@@ -186,7 +188,8 @@ export const PIECES = [
   { id: 'lack', only: 'a', p: 'lack-shelf', kind: 'shelf', x0: R - 26, z0: 90, x1: R, z1: 200, y0: 172, y1: 177, spools: 'w' },
   { id: 'tertial-1', only: 'a', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 92, x1: R - 4, z1: 102, y0: 73.8, y1: 125, aim: [-40, 0] },
   { id: 'tertial-2', only: 'a', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 186, x1: R - 4, z1: 196, y0: 73.8, y1: 125, aim: [-40, 0] },
-  { id: 'machine-1', only: 'a', p: null, prop: 'Your embroidery machine', kind: 'machine', x0: R - 52, z0: 100, x1: R - 12, z1: 150, y0: 73.8, y1: 106 },
+  // Brother SE2000: 17½″ (along the wall) × 9½″ deep × 11¾″ tall; the embroidery unit attaches on its left.
+  { id: 'machine-1', only: 'a', p: null, prop: 'Your Brother SE2000', propNote: SE2000_NOTE, embroidery: true, kind: 'machine', x0: R - 38, z0: 100, x1: R - 14, z1: 144.6, y0: 73.8, y1: 103.8 },
   { id: 'machine-2', only: 'a', p: null, prop: 'Your sewing machine', kind: 'machine', x0: R - 48, z0: 160, x1: R - 18, z1: 200, y0: 73.8, y1: 103 },
   { id: 'chair-office', only: 'a', p: 'langfjall', kind: 'officechair', x0: 205, z0: 120, x1: 260, z1: 175, y0: 0, y1: 110, face: 'e' },
 
@@ -242,7 +245,7 @@ export const PIECES = [
   { id: 'b-tertial-1', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 104, x1: R - 4, z1: 114, y0: 77, y1: 128 },
   { id: 'b-tertial-2', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 228, x1: R - 4, z1: 238, y0: 106, y1: 157 },
   { id: 'b-machine-2', only: 'b', p: null, prop: 'Your sewing machine', kind: 'machine', x0: R - 34, z0: 58, x1: R - 4, z1: 98, y0: 77, y1: 106 },
-  { id: 'b-machine-1', only: 'b', whenOpen: 'b-billy', p: null, prop: 'Your embroidery machine', kind: 'machine', x0: R - 100, z0: 195, x1: R - 60, z1: 237, y0: 74.3, y1: 106.5 },
+  { id: 'b-machine-1', only: 'b', whenOpen: 'b-billy', p: null, prop: 'Your Brother SE2000', propNote: SE2000_NOTE, embroidery: true, kind: 'machine', x0: R - 95, z0: 192, x1: R - 71, z1: 236.6, y0: 74.3, y1: 104.3 },
   { id: 'b-chair-office', only: 'b', p: 'langfjall', kind: 'officechair', x0: 164, z0: 176, x1: 219, z1: 231, y0: 0, y1: 110, face: 'e' },
 
   // Centre: NORDEN starts folded down to 10¼″ so the desks and BILLY table

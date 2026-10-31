@@ -435,10 +435,11 @@ export const BUILDERS = {
     g.add(box(p.x0 + d * 0.25, p.y0 + 10, p.z1 - 12, p.x1 - d * 0.1, p.y1, p.z1, m));
     g.add(box(p.x0 + d * 0.25, p.y1 - 9, p.z0 + 2, p.x1 - d * 0.1, p.y1, p.z1, m));
     g.add(box(p.x0 + d * 0.24, p.y1 - 18, p.z1 - 11, p.x0 + d * 0.25, p.y1 - 10, p.z1 - 3, accent));
-    if (p.id === 'machine-1') {
-      // embroidery unit + hoop on the bed
-      g.add(box(p.x0 - 8, p.y0, p.z0 - 22, p.x1 - 4, p.y0 + 8, p.z0 + 4, m));
-      g.add(box(p.x0 - 2, p.y0 + 10, p.z0 - 16, p.x0 + 26, p.y0 + 11.5, p.z0 + 10, mat('#e9dfcf')));
+    if (p.embroidery) {
+      // embroidery unit on the left of the machine, with the 5″ × 7″ hoop
+      g.add(box(p.x0 - 10, p.y0, p.z0 - 24, p.x1, p.y0 + 9, p.z0 + 6, m));
+      g.add(box(p.x0 - 6, p.y0 + 9, p.z0 - 14, p.x0 + 20, p.y0 + 10.5, p.z0 + 6, mat('#e9dfcf')));
+      g.add(box(p.x0 - 4, p.y0 + 10.5, p.z0 - 12, p.x0 + 18, p.y0 + 10.8, p.z0 + 4, mat('#f7f3ea')));
     }
   },
 
