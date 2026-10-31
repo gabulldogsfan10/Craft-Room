@@ -73,7 +73,7 @@ export const PRODUCTS = [
   { key: 'lack-shelf', url: 'https://www.ikea.com/us/en/p/lack-wall-shelf-white-90282180/', zone: 'machine', name: 'LACK wall shelf', spec: 'white, 43¼×10¼″', qty: 1, price: 30,
     why: 'Thread cones in rainbow order above the pegboards.' },
   { key: 'tertial', url: 'https://www.ikea.com/us/en/p/tertial-work-lamp-dark-gray-20355434/', zone: 'machine', name: 'TERTIAL work lamp', spec: 'dark gray', qty: 2, price: 20,
-    why: 'Clamp-on task light aimed at the needle area of each machine.' },
+    why: 'Clamp-on task lights: one aimed at the needle area of the SE2000, one for close hand work.' },
   { key: 'langfjall', url: 'https://www.ikea.com/us/en/p/langfjaell-conference-chair-with-armrests-gunnared-beige-white-s89252768/', zone: 'machine', name: 'LÅNGFJÄLL chair with armrests', spec: 'Gunnared beige/white', qty: 1, price: 230,
     why: 'Set the seat so your elbows sit at machine-bed height. IKEA US lists this as a conference chair – check its height range and base on the product page.' },
 
@@ -143,7 +143,7 @@ export const PRODUCTS = [
   { key: 'tjena-b', only: 'b', url: 'https://www.ikea.com/us/en/p/tjena-magazine-file-white-black-dotted-00601054/', zone: 'window', name: 'TJENA magazine file, 2-pack', spec: 'white/black dotted', qty: 3, price: 5,
     why: 'Added: patterns and design printouts in three of the open cubes.' },
   { key: 'kallax-desk', only: 'b', url: 'https://www.ikea.com/us/en/p/kallax-desk-white-30582445/', zone: 'machine', name: 'KALLAX desk', spec: 'white, 43¾×15⅜″, 30⅜″ tall', qty: 2, price: 79.99,
-    why: 'From your design: one on the east wall for the sewing machine, one on the west wall for beading and drawing. At 15⅜″ deep it is too shallow for an embroidery machine with its embroidery arm, which goes on the BILLY table instead.' },
+    why: 'From your design: one on the east wall beside the BILLY embroidery station for hand sewing, cutting small pieces and your laptop for designs, one on the west wall for beading and drawing. At 15⅜″ deep it is too shallow for an embroidery machine with its embroidery arm, which goes on the BILLY table instead.' },
   { key: 'kallax-desk-drawers', only: 'b', url: 'https://www.ikea.com/us/en/p/kallax-insert-with-2-drawers-wave-shaped-light-gray-blue-10592803/', zone: 'machine', name: 'KALLAX insert with 2 drawers', spec: 'wave shaped/light gray-blue, 13×13″', qty: 2, price: 25,
     why: 'From your design: the top cube of each desk – bobbins, needles, presser feet, bead tools.' },
   { key: 'kallax-desk-door', only: 'b', url: 'https://www.ikea.com/us/en/p/kallax-insert-with-door-wave-shaped-light-gray-blue-60592805/', zone: 'machine', name: 'KALLAX insert with door', spec: 'wave shaped/light gray-blue, 13×13″', qty: 2, price: 20,
@@ -190,7 +190,6 @@ export const PIECES = [
   { id: 'tertial-2', only: 'a', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 186, x1: R - 4, z1: 196, y0: 73.8, y1: 125, aim: [-40, 0] },
   // Brother SE2000: 17½″ (along the wall) × 9½″ deep × 11¾″ tall; the embroidery unit attaches on its left.
   { id: 'machine-1', only: 'a', p: null, prop: 'Your Brother SE2000', propNote: SE2000_NOTE, embroidery: true, kind: 'machine', x0: R - 38, z0: 100, x1: R - 14, z1: 144.6, y0: 73.8, y1: 103.8 },
-  { id: 'machine-2', only: 'a', p: null, prop: 'Your sewing machine', kind: 'machine', x0: R - 48, z0: 160, x1: R - 18, z1: 200, y0: 73.8, y1: 103 },
   { id: 'chair-office', only: 'a', p: 'langfjall', kind: 'officechair', x0: 205, z0: 120, x1: 260, z1: 175, y0: 0, y1: 110, face: 'e' },
 
   // West – supply wall
@@ -244,7 +243,6 @@ export const PIECES = [
   { id: 'b-lack', only: 'b', p: 'lack-shelf', kind: 'shelf', x0: R - 26, z0: 90, x1: R, z1: 200, y0: 188, y1: 193 },
   { id: 'b-tertial-1', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 104, x1: R - 4, z1: 114, y0: 77, y1: 128 },
   { id: 'b-tertial-2', only: 'b', p: 'tertial', kind: 'tertial', x0: R - 14, z0: 228, x1: R - 4, z1: 238, y0: 106, y1: 157 },
-  { id: 'b-machine-2', only: 'b', p: null, prop: 'Your sewing machine', kind: 'machine', x0: R - 34, z0: 58, x1: R - 4, z1: 98, y0: 77, y1: 106 },
   { id: 'b-machine-1', only: 'b', whenOpen: 'b-billy', p: null, prop: 'Your Brother SE2000', propNote: SE2000_NOTE, embroidery: true, kind: 'machine', x0: R - 95, z0: 192, x1: R - 71, z1: 236.6, y0: 74.3, y1: 104.3 },
   { id: 'b-chair-office', only: 'b', p: 'langfjall', kind: 'officechair', x0: 164, z0: 176, x1: 219, z1: 231, y0: 0, y1: 110, face: 'e' },
 
