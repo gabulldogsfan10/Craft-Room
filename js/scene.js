@@ -570,6 +570,36 @@ export const BUILDERS = {
       g.add(sub);
       return;
     }
+    if (p.casters && !p.raised) {
+      // on ALEX casters: the table rides `casters` higher; casters under the
+      // drawer section, and a block under each gateleg foot so the raised
+      // leaves still reach the floor
+      const sub = new THREE.Group();
+      BUILDERS.norden({ ...p, raised: true }, sub);
+      sub.position.y = p.casters;
+      g.add(sub);
+      const m0 = p.midX0 ?? p.x1 - 26;
+      const m1 = p.midX1 ?? p.x1;
+      const lv = p.leaves ?? { w: m0 - p.x0 > 1, e: p.x1 - m1 > 1 };
+      const black = mat('#1f1f22', { roughness: 0.5 });
+      for (const x of [m0 + 4, m1 - 4]) {
+        for (const z of [p.z0 + 6, p.z1 - 6]) {
+          g.add(box(x - 2.5, p.casters - 1, z - 2.5, x + 2.5, p.casters, z + 2.5, mat('#9aa0a6', { metalness: 0.6 })));
+          const wheel = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 1.6, 16), black);
+          wheel.rotation.x = Math.PI / 2;
+          wheel.position.set(x, 2.5, z);
+          g.add(wheel);
+          g.add(box(x - 0.4, 2.5, z - 0.4, x + 0.4, p.casters - 1, z + 0.4, mat('#9aa0a6', { metalness: 0.6 })));
+        }
+      }
+      const blockMat = mat('#6b6f75', { roughness: 0.9 });
+      for (const side of ['w', 'e']) {
+        if (!lv[side]) continue;
+        const lx = side === 'w' ? m0 - 63 + 6 : m1 + 63 - 10;
+        for (const z of [p.z0 + 4, p.z1 - 8]) g.add(box(lx - 0.5, 0, z - 0.5, lx + 4.5, p.casters, z + 4.5, blockMat));
+      }
+      return;
+    }
     const W = white();
     const top = 74;
     const mid0 = p.midX0 ?? p.x1 - 26;

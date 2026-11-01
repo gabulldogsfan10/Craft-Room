@@ -45,6 +45,18 @@ const CUSTOM = {
     }
     for (const x of [30, 170]) g.add(box(x - 1, 20, -8, x + 1, 23, 0, m), box(x - 3, 14, -9, x + 3, 26, -8, m));
   },
+  caster(g) {
+    const metal = mat(COLORS.steel, { metalness: 0.6, roughness: 0.35 });
+    const black = mat('#1f1f22', { roughness: 0.5 });
+    for (let i = 0; i < 4; i++) {
+      const x = i * 9;
+      g.add(box(x - 2.5, 6, -2.5, x + 2.5, 7, 2.5, metal), box(x - 0.4, 2.5, -0.4, x + 0.4, 6, 0.4, metal));
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 1.6, 16), black);
+      wheel.rotation.x = Math.PI / 2;
+      wheel.position.set(x, 2.5, 0);
+      g.add(wheel);
+    }
+  },
   hooks(g) {
     const m = mat('#e9e6e0');
     for (let i = 0; i < 5; i++) {
@@ -146,6 +158,7 @@ const MODELS = {
   boaxel: { build: g => CUSTOM.boaxel(g), from: [0.4, 0.3, 1] },
   'kuggis-large': { build: g => CUSTOM.kuggis(g, 26, 35, 15), from: [0.7, 0.7, 1] },
   'skadis-36': { piece: P('skadis', 36, 2, 56, { face: 's' }), from: [0.3, 0.2, 1] },
+  'alex-caster': { build: g => CUSTOM.caster(g), from: [0.5, 0.6, 1] },
 
   // Option 2 – KALLAX design pieces
   'kallax-2x4': { piece: P('kallaxGrid', 76.5, 39, 146.5, { cols: 2, rows: 4, face: 's', cells: [['open', 'open'], ['open', 'open'], ['open', 'open'], ['open', 'open']] }), from: [0.6, 0.4, 1] },

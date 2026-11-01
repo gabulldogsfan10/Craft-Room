@@ -98,6 +98,8 @@ export const PRODUCTS = [
   // --- Centre table ------------------------------------------------------
   { key: 'norden', url: 'https://www.ikea.com/us/en/p/norden-gateleg-table-white-10423886/', zone: 'center', name: 'NORDEN gateleg table', spec: 'white, 10¼/35/59⅞×31½″', qty: 1, price: 250,
     why: 'Folds to 10¼″ when you need floor space, opens to 59⅞″ for cutting fabric, laying out beading or big art. Drawers in the middle for rotary cutters and rulers.' },
+  { key: 'alex-caster', url: 'https://www.ikea.com/us/en/p/alex-caster-black-10480607/', zone: 'center', name: 'ALEX caster', spec: 'black, 2″ wheels, 4-pack', qty: 1, price: 10,
+    why: 'Under the NORDEN’s drawer section so it rolls aside. They raise it 2¾″ (top at about 31⅞″) and hold 44 lb each, but they don’t lock: put a 2¾″ block under each gateleg foot (hardware store) so the leaves reach the floor – with a leaf up, those feet also stop it rolling.' },
   { key: 'teodores', only: 'a', url: 'https://www.ikea.com/us/en/p/teodores-chair-white-30486156/', zone: 'center', name: 'TEODORES chair', spec: 'white', qty: 2, price: 35,
     why: 'Light, wipeable chairs that tuck under the table.' },
   { key: 'raskog', url: 'https://www.ikea.com/us/en/p/raskog-utility-cart-white-30586783/', zone: 'center', name: 'RÅSKOG utility cart', spec: 'white, 13¾×17¾×30⅜″', qty: 1, price: 40,
@@ -201,7 +203,7 @@ export const PIECES = [
   // Centre
   { id: 'rug', p: 'lohals', kind: 'rug', x0: 62, z0: 50, x1: 222, z1: 280, y0: 0, y1: 0.8 },
   // One leaf raised (35″ long); the drawer section sits at the east end.
-  { id: 'norden', only: 'a', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'one', turnable: true, cx: 171, cz: 150, x0: 95, z0: 110, x1: 184, z1: 190, y0: 0, y1: 74 },
+  { id: 'norden', only: 'a', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'one', turnable: true, cx: 171, cz: 150, x0: 95, z0: 110, x1: 184, z1: 190, y0: 0, y1: 81, casters: 7, extras: [{ p: 'alex-caster', qty: 1 }] },
   { id: 'chair-1', only: 'a', p: 'teodores', kind: 'chair', x0: 117, z0: 196, x1: 160, z1: 240, y0: 0, y1: 80, face: 'n' },
   { id: 'chair-2', only: 'a', p: 'teodores', kind: 'chair', x0: 51, z0: 128, x1: 93, z1: 172, y0: 0, y1: 80, face: 'e' },
   { id: 'raskog', p: 'raskog', kind: 'cart', x0: 190, z0: 250, x1: 225, z1: 295, y0: 0, y1: 78 },
@@ -248,7 +250,7 @@ export const PIECES = [
 
   // Centre: NORDEN starts folded down to 10¼″ so the desks and BILLY table
   // have room; raise its leaves for cutting fabric.
-  { id: 'b-norden', only: 'b', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'folded', turnable: true, cx: 123, cz: 160, x0: 110, z0: 120, x1: 136, z1: 200, y0: 0, y1: 74 },
+  { id: 'b-norden', only: 'b', p: 'norden', kind: 'norden', fold: 'norden', foldDefault: 'folded', turnable: true, cx: 123, cz: 160, x0: 110, z0: 120, x1: 136, z1: 200, y0: 0, y1: 81, casters: 7, extras: [{ p: 'alex-caster', qty: 1 }] },
 ];
 
 // Camera presets that match where each photo was taken from.

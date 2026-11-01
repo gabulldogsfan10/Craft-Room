@@ -21,6 +21,7 @@ const LINKS = {
   alex: { name: 'ALEX drawer unit, white', url: `${U}alex-drawer-unit-white-00473546/`, size: '14⅛″ × 22⅞″ × 27½″', price: 95 },
   olov: { name: 'OLOV leg, adjustable, white', url: `${U}olov-leg-adjustable-white-10264302/`, size: '23⅝–35⅜″ tall', price: 12.5 },
   norden: { name: 'NORDEN gateleg table, white', url: `${U}norden-gateleg-table-white-10423886/`, size: '10¼ / 35 / 59⅞″ × 31½″', price: null },
+  caster: { name: 'ALEX caster, black (4-pack)', url: `${U}alex-caster-black-10480607/`, size: '2″ wheels, adds 2¾″, 44 lb each, no brakes', price: 10 },
 };
 
 const TOPS = {
@@ -72,9 +73,9 @@ export const OPTIONS = [
   },
   {
     id: 'norden', title: 'Option 3 · NORDEN folding return', tag: 'Folds away',
-    blurb: 'The window arm and main desk as in Option 1, with the NORDEN gateleg table as the third side. Its 29⅛″ top lines up with the desk; drop the leaf to clear the floor, or raise the far leaf too for cutting fabric. The 38⅞″ KARLBY offcut, ripped to 10″ deep, becomes a shelf above the desk.',
+    blurb: 'The window arm and main desk as in Option 1, with the NORDEN gateleg table as the third side, on ALEX casters so it rolls out of the way. The casters lift it 2¾″, so its top sits at about 31⅞″, just above the 29″ desk – push it against the desk end rather than under it. A 2¾″ block under each gateleg foot lets the leaves reach the floor and stops the table rolling while a leaf is up. Raise the far leaf too for cutting fabric. The 38⅞″ KARLBY offcut, ripped to 10″ deep, becomes a shelf above the desk.',
     plan: layout('karlby', 'norden'),
-    parts: [[2, 'karlby'], [2, 'alex'], [2, 'olov'], [1, 'norden']],
+    parts: [[2, 'karlby'], [2, 'alex'], [2, 'olov'], [1, 'norden'], [1, 'caster']],
   },
 ];
 
@@ -129,7 +130,7 @@ function buildScene(plan) {
   for (const [x, z] of plan.legs) g.add(cyl(c(x), 0, c(z), c(0.8), c(ALEX.h), legMat));
   if (plan.norden) {
     BUILDERS.norden({
-      cx: c(plan.norden.cx), cz: c(plan.norden.cz), y0: 0, y1: 74,
+      cx: c(plan.norden.cx), cz: c(plan.norden.cz), y0: 0, y1: 81, casters: 7,
       local: { x0: -13 - 63, x1: 13, z0: -40, z1: 40, midX0: -13, midX1: 13 },
       leaves: { w: true, e: false }, turned: false,
     }, g);
