@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>U-Desk Options</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/controls/OrbitControls.js": "./vendor/three/controls/OrbitControls.js"
+      }
+    }
+  </script>
+  <style>
+    .u-intro { max-width: 900px; }
+    .u-options { display: grid; gap: 20px; }
+    .u-card { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+    .u-card h2 { margin: 0 0 4px; font-size: 1.15rem; }
+    .u-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+    .u-head .u-cost { margin-left: auto; font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .u-pill { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 16%, transparent); }
+    .u-blurb { grid-column: 1 / -1; margin: 0; color: var(--muted); max-width: 900px; }
+    .u-3d { position: relative; }
+    .u-3d canvas { width: 100%; height: 360px; display: block; border-radius: 10px; border: 1px solid var(--line); background: var(--wall-fill); cursor: grab; touch-action: none; }
+    .u-3d p { margin: 4px 2px 0; font-size: 12px; color: var(--muted); }
+    .u-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .udesk-plan { width: 100%; max-width: 380px; height: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+    .udesk-plan text { font-family: system-ui, sans-serif; fill: var(--ink); }
+    .u-grid { stroke: var(--line); stroke-width: 0.25; }
+    .u-wall { fill: var(--wall); }
+    .u-window { fill: #9cc4dc; }
+    .u-swing { fill: none; stroke: #e0a03c; stroke-width: 0.6; stroke-dasharray: 2 1.5; }
+    .u-door { stroke: #e0a03c; stroke-width: 0.8; }
+    .u-alex { fill: #ffffff; stroke: #9aa0a6; stroke-width: 0.4; stroke-dasharray: 1 0.8; }
+    .u-top { stroke: #6f5a3f; stroke-width: 0.5; fill-opacity: 0.85; }
+    .u-top-karlby { fill: #c9a77c; }
+    .u-top-saljan { fill: #d3b48b; }
+    .u-top-ekbacken { fill: #e4d6bc; }
+    .u-leg { fill: #6b6f75; }
+    .u-norden { fill: #f2f0eb; stroke: #9aa0a6; stroke-width: 0.5; }
+    .u-norden-leaf { fill: none; stroke: #9aa0a6; stroke-width: 0.5; stroke-dasharray: 2 1.2; }
+    .u-shelf { fill: none; stroke: #6f5a3f; stroke-width: 0.5; stroke-dasharray: 1.5 1; }
+    .u-label { font-size: 3.4px; text-anchor: middle; dominant-baseline: middle; font-weight: 600; }
+    .u-note { font-size: 3px; fill: var(--muted) !important; }
+    .u-dim { stroke: var(--ink); stroke-width: 0.3; }
+    .u-dimtext { font-size: 3.2px; text-anchor: middle; dominant-baseline: middle; font-weight: 700; fill: var(--accent) !important; }
+    .u-parts { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .u-parts td { padding: 5px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+    .u-parts td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .u-parts small { display: block; color: var(--muted); }
+    .u-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+    .u-legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; border-radius: 2px; background: var(--c); border: 1px solid #9aa0a6; }
+    @media (max-width: 860px) { .u-card { grid-template-columns: 1fr; } .u-3d canvas { height: 300px; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>U-Desk Options</h1>
+      <p class="sub">IKEA hack along the west wall and the 35″ of window wall · 25⅝″-deep tops at about 29″</p>
+    </div>
+  </header>
+  <main>
+    <p class="lead u-intro">Three ways to build the U from IKEA parts, shown in the room's north-west corner. Drag a 3D view to turn it, scroll or pinch to zoom. The window is drawn starting 35″ from the corner, as you measured; the dashed orange arc is the closet door's swing, which the desk stays clear of. The Brother SE2000 is on the main desk for scale.</p>
+    <div class="u-legend card">
+      <span style="--c:#c9a77c">Countertop</span>
+      <span style="--c:#ffffff">ALEX drawer unit (under the top)</span>
+      <span style="--c:#6b6f75">OLOV leg</span>
+      <span style="--c:#e0a03c">Closet door swing</span>
+    </div>
+    <div class="u-options" id="u-options"></div>
+    <div class="card" style="margin-top:20px">
+      <h3>Not from IKEA</h3>
+      <p>IKEA doesn't sell the joining hardware: a wood cleat screwed along the wall under the back edges, mending plates or countertop connector bolts for the seams, and sealer (KARLBY) or iron-on edge banding (laminate) for cut edges. IKEA doesn't cut countertops either – use a circular saw with a straight guide, or a hardware store that cuts. Prices are IKEA US list prices; check them when you order.</p>
+    </div>
+  </main>
+  <script type="module">
+    import { OPTIONS, LINKS, partsCost, mount3D, planSvg } from './js/udesk.js';
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const money = n => `$${(Math.round(n * 100) / 100).toLocaleString('en-US', Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const row = ([q, k]) => {
+      const p = LINKS[k];
+      return `<tr><td class="n">${q}×</td><td><a href="${p.url}" target="_blank" rel="noopener">${esc(p.name)}</a><small>${esc(p.size)}</small></td>
+        <td class="n">${p.price ? money(q * p.price) : 'in your plan'}</td></tr>`;
+    };
+    for (const o of OPTIONS) {
+      const card = document.createElement('section');
+      card.className = 'card u-card';
+      const alt = o.alt ? `<p class="muted" style="margin:6px 0 0;font-size:13px">Or swap in ${o.alt[0]}× <a href="${LINKS[o.alt[1]].url}" target="_blank" rel="noopener">${esc(LINKS[o.alt[1]].name)}</a> (${money(LINKS[o.alt[1]].price)} each) for about ${money(partsCost(o) - o.parts[0][0] * LINKS[o.parts[0][1]].price + o.alt[0] * LINKS[o.alt[1]].price)} total.</p>` : '';
+      card.innerHTML = `
+        <div class="u-head"><h2>${esc(o.title)}</h2><span class="u-pill">${esc(o.tag)}</span><span class="u-cost">about ${money(partsCost(o))}${o.id === 'norden' ? ' + NORDEN' : ''}</span></div>
+        <p class="u-blurb">${esc(o.blurb)}</p>
+        <div class="u-3d"><canvas aria-label="3D view of ${esc(o.title)}"></canvas><p>Drag to turn · scroll or pinch to zoom</p></div>
+        <div class="u-side">
+          <div class="u-planbox"></div>
+          <table class="u-parts"><tbody>${o.parts.map(row).join('')}</tbody></table>${alt}
+        </div>`;
+      document.getElementById('u-options').append(card);
+      card.querySelector('.u-planbox').append(planSvg(o.plan));
+      mount3D(card.querySelector('canvas'), o.plan);
+    }
+  </script>
+</body>
+</html>

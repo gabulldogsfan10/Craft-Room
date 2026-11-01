@@ -60,6 +60,12 @@ Check that every piece in both layouts fits the walls, window and door swings
 node tools/check-fit.mjs
 ```
 
+## U-desk hack options
+
+`udesk.html` shows three ways to build a U-shaped desk from IKEA countertops,
+ALEX drawer units and OLOV legs along the west wall and the 35″ of window wall,
+each in 3D and as a top-view plan with dimensions and linked parts.
+
 ## Editing the design
 
 All measurements, furniture positions and products live in `js/data.js`, with
